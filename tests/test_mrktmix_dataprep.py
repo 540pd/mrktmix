@@ -1,10 +1,9 @@
-import mrktmix as mmm
 import numpy as np
 import pandas as pd
-
 from pytest import approx
-from mrktmix.dataprep import mmm_transform as dp
 
+import mrktmix as mmm
+from mrktmix.dataprep import mmm_transform as dp
 
 # apl when lag is integer
 
