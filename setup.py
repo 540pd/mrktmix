@@ -45,7 +45,7 @@ setup(
         'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)',
-        #'Operating System :: Unix',
+        # 'Operating System :: Unix',
         'Operating System :: POSIX',
         'Operating System :: Microsoft :: Windows',
         'Programming Language :: Python',
@@ -73,10 +73,13 @@ setup(
     ],
     python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*',
     install_requires=[
-        'pandas>=1.1.0', 'numpy>=1.18',
+        'pandas>=1.1.0',
+        'scipy>=1.4.0',
+        'numpy>=1.18.0',
     ],
     extras_require={
-        # eg:
+        'dev': ['pytest>=3.7',
+        ],
         #   'rst': ['docutils>=0.11'],
         #   ':python_version=="2.6"': ['argparse'],
     },
