@@ -79,7 +79,7 @@ Documentation
 =============
 
 
-https://market_mix_model.readthedocs.io/
+https://mrktmix.readthedocs.io/
 
 
 Development

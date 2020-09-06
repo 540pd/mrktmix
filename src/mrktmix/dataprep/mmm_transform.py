@@ -6,7 +6,7 @@ from scipy.signal import lfilter
 
 def apply_apl_(input_list, adstock, power, lag):
     """ Apply advertisement decay (carry over effect or decay effect), diminishing return and lag on array
-    
+
     :param input_list: list of float with marketing or any other activities like spend
     :type input_list: list
     :param adstock: Adstock, carry over effect or decay effect on activity
@@ -24,10 +24,11 @@ def apply_apl_(input_list, adstock, power, lag):
 
 def create_base_(variable, date_input, freq, increasing=False, negative=False, periods=1, panel=None):
     """ Create dummy/base variable for modeling
-    
+
     :param variable: Name of variable
     :type variable: str
-    :param date_input: Dates used in base variable. If input type is str, periods and freq will be used to determine length of date. If input type is list, these dates will be used for base. If input type is tuple, the dates in the tuple will behave like range for date
+    :param date_input: Dates used in base variable. If input type is str, periods and freq will be used to determine length of date.If
+     input type is list, these dates will be used for base. If input type is tuple, the dates in the tuple will behave like range for date
     :type date_input: Union[str, list, tuple]
     :param freq: Frequency strings can have multiples, e.g. ‘5H’. See here for a list of pandas frequency aliases
     :type freq: str or DateOffset, default ‘D’
@@ -42,7 +43,7 @@ def create_base_(variable, date_input, freq, increasing=False, negative=False, p
     :return: pandas Series with date and panel index
     :rtype: pandas.Series
     """
-    
+
     if isinstance(date_input, tuple):
         base_df_index = pd.date_range(start=date_input[0],
                                       end=date_input[1],

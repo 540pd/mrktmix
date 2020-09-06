@@ -6,7 +6,7 @@ from mrktmix.dataprep import mmm_transform as dp
 
 def apply_apl(df_series, adstock, power, lag):
     """ Apply advertisement decay (carry over effect or decay effect), diminishing return and lag on pandas.Series
-    
+
     :param df_series: Series with marketing or any other activities like spend
     :type input_list: pandas.Series
     :param adstock: Adstock, carry over effect or decay effect on activity
@@ -24,12 +24,15 @@ def apply_apl(df_series, adstock, power, lag):
 
 def create_base(variable, date_input, freq, increasing=False, negative=False, periods=1, panel=None):
     """ Create dummy/base variable for modeling
-    
+
     :param variable: Name of variables
     :type variable: list
-    :param date_input: List of string, list and tuble of Dates used in base variable. If input type is str, periods and freq will be used to determine length of date. If input type is list, these dates will be used for base. If input type is tuple, the dates in the tuple will behave like range for date
+    :param date_input: List of string, list and tuble of Dates used in base variable. If input type is str, periods and freq will be used
+     to determine length of date. If input type is list, these dates will be used for base. If input type is tuple, the dates in the tuple
+     will behave like range for date
     :type date_input: list
-    :param freq: list of frequency strings or frequency strings. It can have multiples, e.g. ‘5H’. See here for a list of pandas frequency aliases
+    :param freq: list of frequency strings or frequency strings. It can have multiples, e.g. ‘5H’. See here for a list of pandas frequency
+     aliases
     :type freq: Union[list, str]
     :param increasing: Base values will in increaseing order if True. If false, it will be constant, defaults to False
     :type increasing: Union[list, bool], optional
