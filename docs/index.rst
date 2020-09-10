@@ -1,6 +1,6 @@
-========
-Contents
-========
+=================================
+Documentation of Market Mix Model
+=================================
 
 .. toctree::
    :maxdepth: 2
