@@ -22,6 +22,24 @@ def apply_apl_(input_list, adstock, power, lag):
     return(shift(np.nan_to_num(np.power(lfilter([1], [1, -float(adstock)], input_list, axis=0), power)), lag, cval=0, order=1))
 
 
+def apply_apl_series(df_series, adstock, power, lag):
+    """ Apply advertisement decay (carry over effect or decay effect), diminishing return and lag on pandas.Series
+
+    :param df_series: Series with marketing or any other activities like spend
+    :type df_series: pandas.Series
+    :param adstock: Adstock, carry over effect or decay effect on activity
+    :type adstock: float
+    :param power: Diminishing return or power transformation on activity
+    :type power: float
+    :param lag: Lag transformation on activity
+    :type lag: float
+    :return: Returns input after applying adstock, power and lag transformation
+    :rtype: pandas.Series
+    """
+    if isinstance(df_series, pd.Series):
+        return(pd.Series(apply_apl_(df_series, adstock, power, lag), index=df_series.index, name=(df_series.name, adstock, power, lag)))
+
+
 def create_base_(variable, date_input, freq, increasing=False, negative=False, periods=1, panel=None):
     """ Create dummy/base variable for modeling
 
