@@ -1,4 +1,4 @@
-__version__ = '0.0.8'
+__version__ = '0.0.9'
 from mrktmix.transformation import apply_apl
 from mrktmix.transformation import apply_coef
 from mrktmix.transformation import collapse_date
