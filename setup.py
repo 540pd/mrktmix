@@ -25,7 +25,7 @@ def read(*names, **kwargs):
 
 setup(
     name='mrktmix',
-    version='0.1.0',
+    version='0.1.1',
     license='LGPL-3.0-or-later',
     description='Market Mix Modeling',
     long_description='%s\n%s' % (
