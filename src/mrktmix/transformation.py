@@ -129,3 +129,18 @@ def collapse_date(dep_decompose, date_dict):
         else:
             all_decomp_smry = decomp_smry.to_frame()
     return(all_decomp_smry)
+
+
+def assess_error(dep_decompose):
+    """ Create actual vs predicted with error terms from given resonse decomposition
+
+    :param dep_decompose: data with decomposition of response variable and Residual term
+    :type dep_decompose: pandas.DataFrame
+    :return: dataframe with actual, predicted, error and error % to measure accury of model
+    :rtype: pandas.DataFrame
+    """
+    dep = dep_decompose.sum(axis=1).rename("Dependent")
+    pred = dep_decompose.drop("Residual", axis=1).sum(axis=1).rename("Predicted")
+    residual = (dep-pred).rename("Error")
+    residual_perc = (residual/dep).rename("Error %")
+    return(pd.concat([dep, pred, residual, residual_perc], axis=1))

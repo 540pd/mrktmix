@@ -443,3 +443,23 @@ def test_collapse_date():
     expected_output = pd.DataFrame(expected_output)
     expected_output.index.names = [None, "Variable", "Adstock", "Power", "Lag"]
     pd.testing.assert_frame_equal(mmm.collapse_date(dep_decompose, date_dict), expected_output)
+
+
+def test_assess_error():
+    # Create model coefficient
+    ind = [np.repeat(["CITY", "METRO"], 2),
+           [("Intercept", 0, 1, 0), ("A", 0, 1, 0), ("Intercept", 0, 1, 0), ("B", 0, 1, 0)]]
+    coef = pd.Series(data=[.2, .3, .4, .5], index=ind)
+    # Create data
+    df_ind = [np.repeat(["CITY", "METRO"], 3), np.tile(pd.date_range(start='1/1/2018', end='1/03/2018'), 2)]
+    df = pd.DataFrame({'A': [773, 137, 508, 562, 365, 500], 'B': [848, 326, 969, 730, 761, 137]}, index=df_ind)
+    df["Intercept"] = 1
+    # Create response data
+    dep = pd.DataFrame({'Dep': [773, 137, 508, 562, 365, 500]}, index=df_ind)
+    # Expected Output
+    dep_out = pd.DataFrame({'Dependent': [773.0, 137.0, 508.0, 562.0, 365.0, 500.0]}, index=df_ind)
+    pred = pd.DataFrame({'Predicted': [232.1, 41.3, 152.6, 365.4, 380.9, 68.9]}, index=df_ind)
+    error = pd.DataFrame({'Error': [540.9, 95.7, 355.4, 196.6, -15.9, 431.1]}, index=df_ind)
+    error_perc = pd.DataFrame({'Error %': [0.699741, 0.69854, 0.699606, 0.349822, -0.043562, 0.8622]}, index=df_ind)
+    expected_output = pd.concat([dep_out, pred, error, error_perc], axis=1)
+    pd.testing.assert_frame_equal(mmm.assess_error(mmm.apply_coef(df, coef, dep["Dep"])).round(4), expected_output.round(4))
