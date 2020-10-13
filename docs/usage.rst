@@ -12,13 +12,13 @@ While building models, one often have to create baseline which represents unexpl
 
     # Create base for dates specified i.e. date input is list
     mmm.create_base("var1", ["2020-03-10", "2020-04-07"], "7D", increasing=False, negative=False, panel=None))
-	
+
     # Create base for given range of dates i.e. date input is tuple
     mmm.create_base("var1", ("2020-03-10", "2020-03-21"), "7D", increasing=False, negative=False, panel=None))
-	
+
     # Create base from given date i.e. date input is string
     mmm.create_base("var1", "2020-03-10", "7D", increasing=False, negative=False, periods=3, panel=None))
-	
+
     # Create base from pandas series
     df = pd.DataFrame([["var2", ["2020-03-10", "2020-04-07"]], ["var2", ("2020-03-10", "2020-04-07")], ["var3", ("2020-03-10", "2020-04-06")], ["var4", "2020-03-10"]])
     mmm.create_base(df[0].values, df[1].values, "7D", increasing=False, negative=False, periods=5, panel=["panel1", "panel1", "panel2", "panel1"]))
@@ -47,10 +47,29 @@ Apply modeling/regression coefficient and create decomposition of response varia
 
 Summarize decomposition of response variable::
 
+    # Summarise decomposition of response variables based on date filter
     dep_decompose=apply_coef(df, coef, dep["Dep"])
     date_dict = {'test Year': ('3/1/2018', '3/1/2018'), 'train_year': ('1/1/2018', '2/1/2018')}
     mmm.collapse_date(dep_decompose, date_dict)
 
 Compare response series and predicted series along with errors from decomposition of response variable::
 
+    # Create response variable and predicted series
     mmm.assess_error(apply_coef(df, coef, dep["Dep"]))
+
+Optimize spend based on Revenue where :math:`Revenue = \sum_{i=0}^{N} Coefficient_i * Spend_i^{Power_i}`. Basic input parameters are contraints amount, coefficient and exponent. Constraints can be applied on spend for spend based optimization or revenue for goal based optimization. In addition to these, one can also apply additional contrains like lower and upper bound for spend as well as revenue::
+
+    import gpkit
+    optimum_sol=mmm.optimize_spend(
+                                    10000,
+                                    [85.0, 58.0, 70.0],
+                                    [0.6, 0.4, 0.8],
+                                    spend_lower_limit=[10, 500, 1],
+                                    spend_upper_limit=[10000, 500000, 1000],
+                                    revenue_lower_limit=[500, 696.65, 70.00],
+                                    revenue_upper_limit=[21351.03, 11041.19, 17583.21],
+                                    constraint='spend')
+    # Summary of optimization
+    optimum_sol.table()
+    # Optimized Spend
+    list(*[*optimum_sol["freevariables"].values()])

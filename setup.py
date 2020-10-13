@@ -72,6 +72,7 @@ setup(
         'pandas>=1.1.0',
         'scipy>=1.4.0',
         'numpy>=1.18.0',
+        'gpkit>=0.9.9',
     ],
     extras_require={
         'dev': ['pytest>=3.7',
