@@ -1,4 +1,4 @@
-__version__ = '0.1.1'
+__version__ = '0.1.2'
 from mrktmix.optimization import optimize_spend
 from mrktmix.transformation import apply_apl
 from mrktmix.transformation import apply_coef
