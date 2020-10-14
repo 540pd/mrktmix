@@ -75,6 +75,9 @@ def optimize_spend(
     s = VectorVariable(no_of_optim_params, "s", "-", "spend")
     r = VectorVariable(no_of_optim_params, "r", "-", "revenue")
     r = coef * np.power(s, power)
+    r_inv = VectorVariable(no_of_optim_params, "r_inv", "-", "inverse of individual revenue")
+    # r_inv = np.power(coef, -1) * np.power(s, np.multiply(-1, np.power(power, -1)))
+    r_inv = coef * np.power(s, np.multiply(-1, power))
 
     # Constraints
     # must enable signomials for subtraction
@@ -91,7 +94,7 @@ def optimize_spend(
         objective = sum(s)
     else:
         # spend based optimization
-        objective = r.sum()/r.prod()
+        objective = sum(r_inv)
 
     # Formulate the Model
     m = Model(objective, constraints)
