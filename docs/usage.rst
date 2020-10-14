@@ -57,7 +57,7 @@ Compare response series and predicted series along with errors from decompositio
     # Create response variable and predicted series
     mmm.assess_error(apply_coef(df, coef, dep["Dep"]))
 
-Optimize spend based on Revenue where :math:`Revenue = \sum_{i=0}^{N} Coefficient_i * Spend_i^{Power_i}`. Basic input parameters are contraints amount, coefficient and exponent. Constraints can be applied on spend for spend based optimization or revenue for goal based optimization. In addition to these, one can also apply additional contrains like lower and upper bound for spend as well as revenue::
+Optimize spend based on revenue where :math:`Revenue = \sum_{i=0}^{N} Coefficient_i * Spend_i^{Power_i}`. Basic input parameters are contraints amount, coefficient and exponent. Constraints can be applied on spend for spend based optimization or revenue for goal based optimization. In addition to these, one can also apply additional contrains like lower and upper bound for spend as well as revenue::
 
     import gpkit
     optimum_sol=mmm.optimize_spend(
