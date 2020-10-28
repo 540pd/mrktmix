@@ -6,7 +6,7 @@ import mrktmix as mmm
 from mrktmix.dataprep import mmm_transform as dp
 
 # apl when lag is integer
-
+    
 
 def test_create_base_granular():
     # date is list and increasing is False
