@@ -154,29 +154,24 @@ def create_mdldata(input_files, panel_variables, description_variables, metric_v
     :return: modeling dataframe with panel variable as row index and variable_name as variable. Second item of tuple represents mapping from description to code. Third item of tuple represents mapping from file to variables
     :rtype: tuples of pandas.DataFrame, dictionary, dictionary
     """
-    
+
     description2code_agg=description2code.copy()
+    file_mapping=pd.DataFrame()
     if iteratively:
         mdl_data=pd.DataFrame()
         for name_df, input_df in input_files.items():
             mapped_data, des2code = apply_mapping(input_df, description_variables,code_length=code_length, delimeter=delimeter, description2code=description2code_agg, case_sensitive=case_sensitive)
             description2code_agg.update(des2code)
-            mapped_data["_File_Mapping_"]=name_df
-            file_mapping=(pd.Series(mapped_data["_Variable_"].values,index=mapped_data["_File_Mapping_"].values)
-              .groupby(level=0)
-              .unique()
-              .apply(list)
-              .to_dict())
+            mapped_data["_File_"]=name_df
+            file_mapping=file_mapping.append(mapped_data[["_File_", "_Variable_",*description_variables]].drop_duplicates().set_index(["_File_","_Variable_"]))
             mdl_df=long2wide(mapped_data, panel_variables, description_variables[metric_index], metric_value, summary_type, variable_name='_Variable_', case_sensitive=case_sensitive)
             mdl_data=pd.concat([mdl_data, mdl_df], axis=1)
     else:
         input_df=pd.concat(input_files)
+        input_df=input_df.reset_index(level=0).rename(columns={'level_0':'_File_'})
         mapped_data, des2code = apply_mapping(input_df, description_variables, code_length=code_length, delimeter=delimeter, description2code=description2code_agg, case_sensitive=case_sensitive)
         description2code_agg.update(des2code)
-        file_mapping=(pd.Series(mapped_data["_Variable_"].values,index=mapped_data.index.get_level_values(0))
-                      .groupby(level=0)
-                      .unique()
-                      .apply(list)
-                      .to_dict())
+        file_mapping=file_mapping.append(mapped_data[["_File_", "_Variable_",*description_variables]].drop_duplicates())
+        file_mapping=file_mapping.set_index(["_File_","_Variable_"])
         mdl_data=long2wide(mapped_data, panel_variables, description_variables[metric_index], metric_value, summary_type, variable_name='_Variable_', case_sensitive=case_sensitive)
     return(mdl_data, description2code_agg, file_mapping)

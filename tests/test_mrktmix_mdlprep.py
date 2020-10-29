@@ -247,12 +247,33 @@ def test_create_mdldata():
     output_data=pd.DataFrame.from_dict(output_data)
     output_data.columns.names=["_summary_type_",'_Variable_']
     output_data.index.names=['Panel']
-    file_map={'source1': ['ZOZ_F85', 'ZOZ_GMJ'], 'source2': ['ZOZ_F85', 'ZOZ_GMJ']}
+    file_map=pd.DataFrame(np.array([['TV_Free', 'GRp'],
+           ['TV_Free', 'Spend'],
+           ['TV_Free', 'GRP'],
+           ['TV_Free', 'SpenD'],
+           ['TV_Free', 'gRP'],
+           ['TV_Free', 'GRp'],
+           ['TV_Free', 'Spend'],
+           ['TV_Free', 'GRP'],
+           ['TV_Free', 'SpenD'],
+           ['TV_Free', 'gRP']]),
+        index=pd.MultiIndex.from_tuples([('source1', 'ZOZ_F85'),
+                    ('source1', 'ZOZ_GMJ'),
+                    ('source1', 'ZOZ_F85'),
+                    ('source1', 'ZOZ_GMJ'),
+                    ('source1', 'ZOZ_F85'),
+                    ('source2', 'ZOZ_F85'),
+                    ('source2', 'ZOZ_GMJ'),
+                    ('source2', 'ZOZ_F85'),
+                    ('source2', 'ZOZ_GMJ'),
+                    ('source2', 'ZOZ_F85')],
+                   names=['_File_', '_Variable_']),
+        columns=["Channel","Metric"])
     random.seed(999) 
     mdl_data, code_mapping, file_mapping= raw_dp.create_mdldata(input_files, ['Panel'], ["Channel", "Metric"], "Metric_Value")
     pd.testing.assert_frame_equal(mdl_data, output_data)
     assert code_mapping==output_mapping
-    assert file_mapping==file_map
+    pd.testing.assert_frame_equal(file_mapping, file_map)
 
     # Test when input mapping is given
     output_data={('sum', 'TV_GRP'): {'panel1': 66.0, 'panel2': 90.0, 'panel3': 146.0},
@@ -266,12 +287,33 @@ def test_create_mdldata():
      'GRp': 'GRP',
      'SpenD': 'SPD',
      'gRP': 'GRP'}
-    file_map={'source1': ['TV_GRP', 'TV_SPD'], 'source2': ['TV_GRP', 'TV_SPD']}
+    file_map=pd.DataFrame(np.array([['TV_Free', 'GRp'],
+           ['TV_Free', 'Spend'],
+           ['TV_Free', 'GRP'],
+           ['TV_Free', 'SpenD'],
+           ['TV_Free', 'gRP'],
+           ['TV_Free', 'GRp'],
+           ['TV_Free', 'Spend'],
+           ['TV_Free', 'GRP'],
+           ['TV_Free', 'SpenD'],
+           ['TV_Free', 'gRP']]),
+        index=pd.MultiIndex.from_tuples([('source1', 'TV_GRP'),
+                ('source1', 'TV_SPD'),
+                ('source1', 'TV_GRP'),
+                ('source1', 'TV_SPD'),
+                ('source1', 'TV_GRP'),
+                ('source2', 'TV_GRP'),
+                ('source2', 'TV_SPD'),
+                ('source2', 'TV_GRP'),
+                ('source2', 'TV_SPD'),
+                ('source2', 'TV_GRP')],
+                   names=['_File_', '_Variable_']),
+        columns=["Channel","Metric"])
     random.seed(999) 
     mdl_data, code_mapping, file_mapping = raw_dp.create_mdldata(input_files, ['Panel'], ["Channel", "Metric"] ,"Metric_Value", description2code={'GRP':'GRP',"Spend":'SPD',"TV_Free":"TV"})
     pd.testing.assert_frame_equal(mdl_data, output_data)
     assert code_mapping==output_mapping
-    assert file_mapping==file_map
+    pd.testing.assert_frame_equal(file_mapping, file_map)
 
     # case sensitive
     output_data={('sum', 'TV_4IU'): {'panel1': np.nan, 'panel2': 258.0, 'panel3': np.nan},
@@ -288,14 +330,34 @@ def test_create_mdldata():
      'GRp': 'F85',
      'SpenD': '4IU',
      'gRP': 'GMJ'}
-    file_map={'source1': ['TV_F85', 'TV_SPD', 'TV_GRP', 'TV_4IU', 'TV_GMJ'],
-     'source2': ['TV_F85', 'TV_SPD', 'TV_GRP', 'TV_4IU', 'TV_GMJ']}
+    file_map = pd.DataFrame(np.array([['TV_Free', 'GRp'],
+           ['TV_Free', 'Spend'],
+           ['TV_Free', 'GRP'],
+           ['TV_Free', 'SpenD'],
+           ['TV_Free', 'gRP'],
+           ['TV_Free', 'GRp'],
+           ['TV_Free', 'Spend'],
+           ['TV_Free', 'GRP'],
+           ['TV_Free', 'SpenD'],
+           ['TV_Free', 'gRP']]),
+        index=pd.MultiIndex.from_tuples([('source1', 'TV_F85'),
+                ('source1', 'TV_SPD'),
+                ('source1', 'TV_GRP'),
+                ('source1', 'TV_4IU'),
+                ('source1', 'TV_GMJ'),
+                ('source2', 'TV_F85'),
+                ('source2', 'TV_SPD'),
+                ('source2', 'TV_GRP'),
+                ('source2', 'TV_4IU'),
+                ('source2', 'TV_GMJ')],
+                   names=['_File_', '_Variable_']),
+        columns=["Channel","Metric"])
     # case sensitive
     random.seed(999) 
-    mdl_data, code_mapping, file_mapping = raw_dp.create_mdldata(input_files, ['Panel'], ["Channel", "Metric"],"Metric_Value", description2code={'GRP':'GRP',"Spend":'SPD',"TV_Free":"TV"},case_sensitive=True, iteratively=False)
+    mdl_data, code_mapping, file_mapping = raw_dp.create_mdldata(input_files, ['Panel'], ["Channel", "Metric"], "Metric_Value", description2code={'GRP':'GRP',"Spend":'SPD',"TV_Free":"TV"},case_sensitive=True, iteratively=False)
     pd.testing.assert_frame_equal(mdl_data, output_data)
     assert code_mapping==output_mapping
-    assert file_mapping==file_map
+    pd.testing.assert_frame_equal(file_mapping, file_map)
 
     # case sensitive and iteratively
     output=pd.DataFrame(np.array([[ np.nan,  33.,  np.nan,  np.nan, 102.,  np.nan,  33.,  np.nan,  np.nan, 102.],
@@ -320,9 +382,30 @@ def test_create_mdldata():
      'GRp': 'F85',
      'SpenD': '4IU',
      'gRP': 'GMJ'}
-    file_map={'source2': ['TV_F85', 'TV_SPD', 'TV_GRP', 'TV_4IU', 'TV_GMJ']}
+    file_map=pd.DataFrame(np.array([['TV_Free', 'GRp'],
+           ['TV_Free', 'Spend'],
+           ['TV_Free', 'GRP'],
+           ['TV_Free', 'SpenD'],
+           ['TV_Free', 'gRP'],
+           ['TV_Free', 'GRp'],
+           ['TV_Free', 'Spend'],
+           ['TV_Free', 'GRP'],
+           ['TV_Free', 'SpenD'],
+           ['TV_Free', 'gRP']]),
+        pd.MultiIndex.from_tuples([('source1', 'TV_F85'),
+                ('source1', 'TV_SPD'),
+                ('source1', 'TV_GRP'),
+                ('source1', 'TV_4IU'),
+                ('source1', 'TV_GMJ'),
+                ('source2', 'TV_F85'),
+                ('source2', 'TV_SPD'),
+                ('source2', 'TV_GRP'),
+                ('source2', 'TV_4IU'),
+                ('source2', 'TV_GMJ')],
+                   names=('_File_', '_Variable_')),
+                columns=["Channel","Metric"])
     random.seed(999) 
     mdl_data, code_mapping, file_mapping = raw_dp.create_mdldata(input_files, ["Panel"], ["Channel", "Metric"], "Metric_Value", description2code={'GRP':'GRP',"Spend":'SPD',"TV_Free":"TV"}, case_sensitive=True, iteratively=True)
     pd.testing.assert_frame_equal(mdl_data, output)
     assert code_mapping==output_mapping
-    assert file_mapping==file_map
+    pd.testing.assert_frame_equal(file_mapping, file_map)
