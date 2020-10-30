@@ -8,6 +8,30 @@ Assuming you have Python already, install mrktmix::
     import numpy as np
     import mrktmix as mmm
 
+
+Modeling dataset is tabular format dataframe with variable in column and  panel in row index. To create modeling dataset from long format::
+
+    # Create long format data
+    input_df1={'Panel': {0: 'panel1', 1: 'panel1', 2: 'panel2', 3: 'panel2', 4: 'panel2', 5: 'panel3', 6: 'panel3'},
+               'Channel': {0: 'TV_Free', 1: 'TV_Free', 2: 'TV_Free', 3: 'TV_Free', 4: 'TV_Free', 5: 'TV_Free', 6: 'TV_Free'},
+               'Metric': {0: 'GRp', 1: 'Spend', 2: 'GRP', 3: 'SpenD', 4: 'Spend', 5: 'gRP', 6: 'gRP'},
+               'Metric_Value': {0: 33, 1: 102, 2: 45, 3: 129, 4: 170, 5: 24, 6: 49}}
+    input_df1=pd.DataFrame.from_dict(input_df1)
+    input_df2={'Panel': {0: 'panel1', 1: 'panel1', 2: 'panel2', 3: 'panel2', 4: 'panel2', 5: 'panel3', 6: 'panel3'},
+               'Channel': {0: 'TV_Free', 1: 'TV_Free', 2: 'TV_Free', 3: 'TV_Free', 4: 'TV_Free', 5: 'TV_Free', 6: 'TV_Free'},
+               'Metric': {0: 'GRp', 1: 'Spend', 2: 'GRP', 3: 'SpenD', 4: 'Spend', 5: 'gRP', 6: 'gRP'},
+               'Metric_Value': {0: 33, 1: 102, 2: 45, 3: 129, 4: 170, 5: 24, 6: 49}}
+    input_df2=pd.DataFrame.from_dict(input_df2)
+    input_files={"source1":input_df1, "source2":input_df2}
+    # Create modeling data
+    mdl_data, code_mapping, file_mapping = create_mdldata(input_files, ['Panel'], ["Channel", "Metric"] ,"Metric_Value", description2code={'GRP':'GRP',"Spend":'SPD',"TV_Free":"TV"})
+
+To imput missing value where non missing value represents sum of preceding missing values::
+
+    # Spreads non missing values to missing values
+    input_df=pd.DataFrame([[34., np.nan], [np.nan, np.nan], [np.nan,  6.], [30., np.nan], [13., np.nan], [np.nan, np.nan], [20.,  7.], [np.nan, np.nan], [40., np.nan]], columns=["Spend","Volume"])
+    mmm.spread_notna(input_df1)
+
 While building models, one often have to create baseline which represents unexplained or exogenous part of response variable. To crease base for model::
 
     # Create base for dates specified i.e. date input is list
