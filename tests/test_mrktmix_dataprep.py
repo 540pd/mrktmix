@@ -4,6 +4,7 @@ from pytest import approx
 
 from mrktmix.dataprep import mmm_transform as dp
 
+
 def test_apply_apl_lagisint():
     # same output
     assert all(dp.apply_apl_([100, 50, 10, 0, 0, 0], 0, 1, 0) == [100., 50., 10., 0., 0., 0])
