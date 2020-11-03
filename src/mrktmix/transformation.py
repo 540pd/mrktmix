@@ -1,8 +1,7 @@
 import numpy as np
 import pandas as pd
 
-from mrktmix.dataprep import mmm_transform as dp
-
+from mrktmix.dataprep import transform as dp
 
 def create_base(variable, date_input, freq, increasing=False, negative=False, periods=1, panel=None):
     """ Create dummy/base variable for modeling
@@ -45,6 +44,121 @@ def create_base(variable, date_input, freq, increasing=False, negative=False, pe
         base_df = dp.create_base_(variable, date_input, freq, increasing=increasing, negative=negative, periods=periods, panel=panel)
     return(base_df)
 
+def aggregate_data(mdl_data, panel_agg={}, variable_agg={}, metric_index_var=[-1], metric_mean_code=[], delimeter= "_"):
+    """
+    Aggregate modeling data based on panel level or variable level. By defult, sum is used for aggregation.If mean function 
+    needs to be applied in modeling data at given code/level in variable,  metric index variable and metric mean code must
+    to be supplied. The function can only one value being mapped to aggregate panel or aggregate variable. metric mean code
+    is matched after variable aggregation
+    
+    :param mdl_data: modeling data with panel level and columns. Panel must be represented as multiindex rows. 
+    :type mdl_data: pandas.DataFrame
+    :param panel_agg: Information on panel level aggregation. Keys of dicationary represents new panel name and values represents
+    name of panel to be aggregated. Default value is empty dictionary.
+    :type panel_agg: dictionary with list values
+    :param variable_agg: Information on variable level aggregation. Keys of dicationary represents new variable and values represents
+    name of variables to be aggregated. Default value is empty dictionary.
+    :type variable_agg: dictionary with list values
+    :param metric_index_var: index for metric type in variable of modeling data after spliting variable by delimeter supplied. Default value is [-1] 
+    :type metric_index_var: list of integer
+    :param metric_mean_code: list of metric where mean will be applied. mean code is searched before applying variable aggregation
+    :type metric_mean_code: list of string    
+    :param delimeter: delimeter used in variable in modeling data
+    :type delimeter: string
+    :return: modeling dataframe after aggregation at panel and variable level
+    :rtype: pandas.DataFrame  
+    """
+    
+    # check if one variable is mapped to multiple aggregate panel
+    mapped_panels=[j for i  in [*panel_agg.values()] for j in i]
+    multiple_mapped_panels=[i for i in mapped_panels if mapped_panels.count(i) > 1]
+    # check if one variable is mapped to multiple aggregate panel
+    mapped_vars=[j for i  in [*variable_agg.values()] for j in i]
+    multiple_mapped_vars=[i for i in mapped_vars if mapped_vars.count(i) > 1]
+    if len(multiple_mapped_panels) and len(multiple_mapped_vars):
+        raise Exception('Panel and variable mapping contains duplicate values')
+    elif (len(multiple_mapped_panels)):
+        raise Exception('Panel mapping contains duplicate values')
+    elif (len(multiple_mapped_vars)):
+        raise Exception('Variable mapping contains duplicate values')
+    
+    # Reverse key and value of variable agg dictionary
+    variable_agg_reverse={}
+    _=[variable_agg_reverse.update({val_item:key}) for key, val in variable_agg.items() for val_item in val]
+    # Reverse key and value of variable panel dictionary
+    panel_agg_reverse={}
+    _=[panel_agg_reverse.update({val_item:key}) for key, val in panel_agg.items() for val_item in val]
+    # find variables for mean summary
+    mdl_data_renamed=mdl_data.rename(index=panel_agg_reverse, columns=variable_agg_reverse)
+    mean_vars=dp.parse_variable(pd.Series(mdl_data_renamed.columns, index=mdl_data_renamed.columns),
+                   metric_index_var, 
+                   delimiter=delimeter, 
+                   anti=False).isin(metric_mean_code)
+    # sum aggregation
+    sum_agg=(mdl_data_renamed.loc[:,[*~np.isin(np.array(mdl_data_renamed.columns),np.array([*mean_vars[mean_vars.values].index]))]]
+     .sum(level=list(range(mdl_data_renamed.index.nlevels)))
+     .sum(axis=1, level=0))
+    # mean aggregation
+    if len([*mean_vars[mean_vars.values].index]):
+        mean_agg=(mdl_data_renamed[[*mean_vars[mean_vars.values].index]]
+         .mean(level=mdl_data_renamed.index.names)
+         .mean(axis=1, level=0))
+        agg_mdl_data=pd.concat([sum_agg,mean_agg], axis=1)
+    else:
+        agg_mdl_data=sum_agg
+    return(agg_mdl_data)
+
+def segregate_data(aggregated_data, segregated_data, panel_agg={}, variable_agg={}, panel_agg_index=0, match_sum=True):
+    """
+    Segregate aggregated data based on ratio in segregated data. Aggregated data can have panel level aggregation or variable 
+    level aggregation. If panel level aggregation is present, its mapping must be present in panel_agg. If variable level 
+    aggregation present, it must be present in variable_agg. Panel level aggregation is applied on panel_agg_index level 
+    of row index.
+
+    :param aggregated_data: Aggregated data at panel level
+    :type aggregated_data: pandas.DataFrane
+    :param segregated_data: Segregated data is used to compute proportion for segregation of aggregated data 
+    :type segregated_data: pandas.DataFrame
+    :param panel_agg: Information on panel level aggregation. Keys of dicationary represents new panel name (in aggregated data)
+    and values represents name of panel (in segregated data) to be aggregated. Default value is empty dictionary.
+    :type panel_agg: dictionary with list values
+    :param variable_agg: Information on variable level aggregation. Keys of dicationary represents new variable (in aggregated data)
+    and values represents name of variables (in segregated data) to be aggregated. Default value is empty dictionary.
+    :type variable_agg: dictionary with list values
+    :param match_sum: When proportion calculated in segregated data is 0 and corresponding value is present in aggregated data,
+    then sum of aggregated data won't match segregated output data. If match_sum is True, values in segregated output data is 
+    adjusted to match its sum with sum of aggregated data 
+    :type match_sum: bool
+    :return: segregated data at panel level
+    :rtype: pandas.DataFrame  
+    """
+    
+    # Subset relevent variable_agg_subset
+    variable_agg_subset={}
+    _=[variable_agg_subset.update({i:j}) for i,j in variable_agg.items() if i in aggregated_data.columns]
+    # Subset relevent panel_agg_subset
+    panel_agg_subset={}
+    _=[panel_agg_subset.update({i:j}) for i,j in panel_agg.items() if i in aggregated_data.index.get_level_values(panel_agg_index).unique()]
+
+    # aggregate segregated data at panel level
+    panel_level_seg_agg=(aggregate_data(segregated_data, panel_agg=panel_agg_subset, variable_agg={})
+     .reindex(aggregated_data.index))
+    # Variable level segregation on panel level aggregated data
+    var_level_segg=pd.DataFrame()
+    for agg_var,seg_vars in variable_agg_subset.items():
+        var_level_segg_temp=dp.segregate_variable(aggregated_data[agg_var], panel_level_seg_agg[seg_vars], match_sum=match_sum)
+        var_level_segg=pd.concat([var_level_segg,var_level_segg_temp], axis=1)
+    var_level_segg_all=pd.concat([var_level_segg,aggregated_data.loc[:, aggregated_data.columns.isin(panel_level_seg_agg.columns)]], axis=1)
+    # Panel level segregation on variable level segregated data
+    panel_level_segg=pd.DataFrame()
+    for agg_panel,seg_panel in panel_agg_subset.items():
+        panel_level_segg_temp=segregated_data.loc[segregated_data.index.get_level_values(panel_agg_index).isin(seg_panel),var_level_segg_all.columns]
+        panel_level_agg=(var_level_segg_all[var_level_segg_all.index.get_level_values(panel_agg_index).isin([agg_panel])]
+         .droplevel(level=panel_agg_index))
+        panel_level_segg=pd.concat([panel_level_segg, dp.segregate_panel(panel_level_agg, panel_level_segg_temp, match_sum=match_sum)],axis=0)
+    mapped_panels=[j for i  in [*panel_agg.values()] for j in i]
+    panel_var_seg_data=pd.concat([panel_level_segg,var_level_segg_all[~var_level_segg_all.index.get_level_values(panel_agg_index).isin([*panel_agg.keys()])]], axis=0)
+    return(panel_var_seg_data)
 
 def apply_apl(dframe, dict_apl):
     """ Apply advertisement decay (carry over effect or decay effect), diminishing return and lag on pandas.DataFrame
