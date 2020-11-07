@@ -162,3 +162,4 @@ def parse_variable(Name_series, ids_index, delimiter="_", anti=False):
         var_split['Variable'] = var_split.filter(var_split.columns[ids_index], axis = 1).apply(lambda x: delimiter.join(x), axis=1)
     var_split['Variable']=var_split['Variable'].str.rstrip(delimiter)    
     return (var_split['Variable'])
+

@@ -190,7 +190,7 @@ def apply_apl(dframe, dict_apl):
     return(df_transformed)
 
 
-def apply_coef(raw_data, coef, dep_series):
+def apply_coef_(raw_data, coef, dep_series):
     """ Apply coefficient and transformation on raw data
 
     :param raw_data: modeling dataframe with date index at level -1. If panel is present, it should be at level -2.
@@ -203,19 +203,107 @@ def apply_coef(raw_data, coef, dep_series):
     :return: Decomposition of dependent series
     :rtype: pandas.DataFrame
     """
-    panel_var = (pd.Series(coef.index.get_level_values(-1))
+    if coef.index.nlevels!=raw_data.index.nlevels:
+        raise Exception('Mismatch of index in input data')
+    if coef.index.nlevels-1:
+        panel_var = (pd.Series(coef.index.get_level_values(-1))
                  .groupby(coef.droplevel(-1).index)
                  .apply(list)
                  .to_dict())
+    else:
+        panel_var = {False:[*coef.index]}
+
     after_apl = apply_apl(raw_data, panel_var)
-    coef2frame = coef.unstack()
-    coef2frame.columns = pd.MultiIndex.from_tuples(coef2frame.columns)
-    dep_decomposition = after_apl[coef2frame.columns].mul(coef2frame.reindex(after_apl.index, level=0))
+    if coef.index.nlevels-1:
+        coef2frame = coef.unstack()
+        coef2frame.columns = pd.MultiIndex.from_tuples(coef2frame.columns)
+        dep_decomposition = after_apl[coef2frame.columns].mul(coef2frame.reindex(after_apl.index, level=0))
+    else:
+        dep_decomposition = after_apl.mul(coef)
     if dep_series is not None:
         dep_decomposition[("Residual", 0, 1, 0)] = dep_series-dep_decomposition.sum(axis=1)
     return(dep_decomposition)
 
 
+def apply_coef_node_(mdl_data, coef, nodes, node, node_split):
+    """
+    Apply coef on modeling data to create decomposition. 
+    
+    :param mdl_data: modeling dataframe with date index at level -1. If panel is present, it should be at level -2.
+    :type mdl_data: pandas.DataFrame
+    :param coef: Coefficient to be applied on modeling dataframe. Coefficient should have tuple of variable, adstock,power
+        and lag at index level -1. If panel is present in modeling data, then coefficient must have panel information in index at level -2.
+    :type coef: pandas.Series
+    :param nodes: Relationship between indepenent variable and node to be applied on modeling dataframe. Nodes should 
+    have tuple of independent variable, adstock,power and lag at index level -1. If panel is present in modeling data, then nodes
+    must have panel information in index at level -2. Dependent variables should be as value of series
+    :type nodes: pandas.Series
+    :param node: Selected nodes for which decomposition will be created
+    :type dep_series: string
+    :param node_split: Total number of relationshipship for the given node. It will equally seperate decomposition in-between the nodes
+    :type node_split: int
+    :return: Decomposition of dependent series for given node
+    :rtype: pandas.DataFrame
+    """
+
+    # apply apl and create model decomposition
+    df_apl=apply_coef_(
+            mdl_data, 
+            coef[nodes==node], 
+            apply_apl(mdl_data, {False:[node]}).iloc[:,0])
+    # Decomposition of nodes
+    if node_split:
+        df_apl=df_apl.div(node_split)
+        adj_decomposition=pd.concat([df_apl.loc[:,df_apl.columns.get_level_values(0).isin(["Intercept","Residual"])].sum(axis=1).rename(node),
+            (df_apl.assign(_Adjustment_Factor_= lambda x: x.sum(axis=1)*-1)
+                .drop(columns=["Intercept", "Residual"],level=0))
+                      ],axis=1)
+    else:
+        adj_decomposition=df_apl
+    dep_decomposition=(pd.concat([adj_decomposition], axis=1, keys=[("",node)])
+     .droplevel(level=0, axis=1))
+    return(dep_decomposition)
+
+def apply_coef(mdl_data, coef, nodes=None, dep_series=None):
+    """
+    Apply coef on modeling data to create decomposition. If given node is present more than one relationships, then decomposed 
+    series is equally divided into the independent nodes.
+    
+    :param mdl_data: modeling dataframe with date index at level -1. If panel is present, it should be at level -2.
+    :type mdl_data: pandas.DataFrame
+    :param coef: Coefficient to be applied on modeling dataframe. Coefficient should have tuple of variable, adstock,power
+        and lag at index level -1. If panel is present in modeling data, then coefficient must have panel information in index at level -2.
+    :type coef: pandas.Series
+    :param nodes: Relationship between indepenent variable and node to be applied on modeling dataframe. Nodes should 
+    have tuple of independent variable, adstock,power and lag at index level -1. If panel is present in modeling data, then nodes
+    must have panel information in index at level -2. Dependent variables should be as value of series. Default value is None
+    :type nodes: pandas.Series
+    :param dep_series: Dependent Series will be used to calculate residual. It must be at same level modeling dataframe. Default
+    is None. If dependent is not None, then residuals will also be calculated
+    :type dep_series: pandas.Series or None
+    :return: Decomposition of dependent series for given node
+    :rtype: pandas.DataFrame
+    """
+    if nodes is None:
+        # no nodes are present. simple case of decomposition
+        return(apply_coef_(mdl_data, coef, dep_series))
+    else:
+        # Panel is present
+        if nodes.index.nlevels==2:
+            network_decomposition=pd.DataFrame()
+            for panel in nodes.index.get_level_values(0).unique():
+                # count of nodes
+                nodes_count = {node:sum(coef[panel][nodes[panel]!=node].index==node) for node in nodes[panel].unique()}
+                panel_decomposition=pd.concat([apply_coef_node_(mdl_data.loc[[(panel)],:], coef[[panel]], nodes[[panel]], node, node_split) for node, node_split in nodes_count.items()], axis=1)
+                network_decomposition = pd.concat([network_decomposition, panel_decomposition])
+        # Panel is not present
+        else:
+            # count of nodes
+            nodes_count = {node:sum(coef[nodes!=node].index==node) for node in nodes.unique()}
+            network_decomposition=pd.concat([apply_coef_node_(mdl_data, coef, nodes, node, node_split) for node, node_split in nodes_count.items()], axis=1)
+        return(network_decomposition)
+
+        
 def collapse_date(dep_decompose, date_dict):
     """ Summarise data after collapsing date (index at level -1). Summarization is based on date dictionary given in input.
 
