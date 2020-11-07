@@ -1,4 +1,4 @@
-__version__ = '0.1.6'
+__version__ = '0.1.7'
 from mrktmix.data_create import create_mdldata
 from mrktmix.data_create import spread_notna
 from mrktmix.optimization import optimize_spend

@@ -51,9 +51,9 @@ Overview
     :alt: Supported implementations
     :target: https://pypi.org/project/mrktmix
 
-.. |commits-since| image:: https://img.shields.io/github/commits-since/540pd/mrktmix/v0.1.6.svg
+.. |commits-since| image:: https://img.shields.io/github/commits-since/540pd/mrktmix/v0.1.7.svg
     :alt: Commits since latest release
-    :target: https://github.com/540pd/mrktmix/compare/v0.1.6...master
+    :target: https://github.com/540pd/mrktmix/compare/v0.1.7...master
 
 
 
