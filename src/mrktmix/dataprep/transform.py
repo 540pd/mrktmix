@@ -82,58 +82,61 @@ def create_base_(variable, date_input, freq, increasing=False, negative=False, p
         base_df = base_df * -1
     return(base_df)
 
+
 def segregate_variable(aggregated_data, segregated_data, match_sum=True):
     """
-    Segregate aggregate variable in aggregated data based on proportion in segregated data. It assumes row index in aggregated and segregated data
-    is same
-    
+    Segregate aggregate variable in aggregated data based on proportion in segregated data. It assumes row index in aggregated
+    and segregated data are at same level
+
     :param aggregated_data: Aggregated series with aggregate variable
     :type aggregated_data: pandas.Series
-    :param segregated_data: Segregated data is used to compute proportion for segregation of aggregated data 
+    :param segregated_data: Segregated data is used to compute proportion for segregation of aggregated data
     :type segregated_data: pandas.DataFrame
     :param match_sum: When proportion calculated in segregated data is 0 and corresponding value is present in aggregated data,
-    then sum of aggregated data won't match segregated output data. If match_sum is True, values in segregated output data is 
-    adjusted to match its sum with sum of aggregated data 
+    then sum of aggregated data won't match segregated output data. If match_sum is True, values in segregated output data is
+    adjusted to match its sum with sum of aggregated data
     :type match_sum: bool
     :return: segregated data at variable level
-    :rtype: pandas.DataFrame  
+    :rtype: pandas.DataFrame
     """
 
-    prop_data=segregated_data.div(segregated_data.sum(axis=1),axis=0)
-    segregate_df=prop_data.mul(aggregated_data,axis=0)
+    prop_data = segregated_data.div(segregated_data.sum(axis=1), axis=0)
+    segregate_df = prop_data.mul(aggregated_data, axis=0)
     if match_sum:
-        adj_total=(aggregated_data-segregate_df.sum(axis=1)).sum()
-        segregate_df_final=(segregate_df+segregate_df/(segregate_df.sum().sum())*adj_total)
+        adj_total = (aggregated_data - segregate_df.sum(axis=1)).sum()
+        segregate_df_final = (segregate_df + segregate_df / (segregate_df.sum().sum()) * adj_total)
     else:
-        segregate_df_final=segregate_df
+        segregate_df_final = segregate_df
     return(segregate_df_final)
+
 
 def segregate_panel(aggregated_data, segregated_data, match_sum=True):
     """
     Segregate aggregate data at panel level based on proportion in segregated data. It assumes row index in aggregated and segregated data
     is same
-    
+
     :param aggregated_data: Aggregated data at panel level
     :type aggregated_data: pandas.DataFrane
-    :param segregated_data: Segregated data is used to compute proportion for segregation of aggregated data 
+    :param segregated_data: Segregated data is used to compute proportion for segregation of aggregated data
     :type segregated_data: pandas.DataFrame
     :param match_sum: When proportion calculated in segregated data is 0 and corresponding value is present in aggregated data,
-    then sum of aggregated data won't match segregated output data. If match_sum is True, values in segregated output data is 
-    adjusted to match its sum with sum of aggregated data 
+    then sum of aggregated data won't match segregated output data. If match_sum is True, values in segregated output data is
+    adjusted to match its sum with sum of aggregated data
     :type match_sum: bool
     :return: segregated data at panel level
-    :rtype: pandas.DataFrame  
+    :rtype: pandas.DataFrame
     """
-    
-    aggregate_df = segregated_data.sum(level = -1)
-    prop_data=segregated_data.divide(aggregate_df.reindex(segregated_data.index, level= -1),axis=0)    
-    segregate_df=aggregated_data.reindex(prop_data.index, level=-1).mul(prop_data)
+
+    aggregate_df = segregated_data.sum(level=-1)
+    prop_data = segregated_data.divide(aggregate_df.reindex(segregated_data.index, level=-1), axis=0)
+    segregate_df = aggregated_data.reindex(prop_data.index, level=-1).mul(prop_data)
     if match_sum:
-        adj_series=(aggregated_data.sum()-segregate_df.sum())
-        segregate_df_final=(segregate_df/segregate_df.sum()).mul(adj_series).add(segregate_df)
+        adj_series = (aggregated_data.sum() - segregate_df.sum())
+        segregate_df_final = (segregate_df / segregate_df.sum()).mul(adj_series).add(segregate_df)
     else:
-        segregate_df_final=segregate_df
+        segregate_df_final = segregate_df
     return(segregate_df_final)
+
 
 def parse_variable(Name_series, ids_index, delimiter="_", anti=False):
     """
@@ -146,20 +149,19 @@ def parse_variable(Name_series, ids_index, delimiter="_", anti=False):
     :param delimiter: delimiter used in Name_series
     :type delimiter: string
     :param anti: index representing metric variable in description variables
-    :type anti: bool    
+    :type anti: bool
     :return: return matching ids after spliting by delimiter on Name_series
     :rtype: pandas.Series
     """
 
-    if max(ids_index)<0:
-        var_split=Name_series.str.rsplit(pat=delimiter,n=max(map(abs, ids_index)),expand=True)
+    if max(ids_index) < 0:
+        var_split = Name_series.str.rsplit(pat=delimiter, n=max(map(abs, ids_index)), expand=True)
     else:
-        var_split=Name_series.str.split(pat=delimiter,expand=True)
-    var_split[var_split.isna()]=""
+        var_split = Name_series.str.split(pat=delimiter, expand=True)
+    var_split[var_split.isna()] = ""
     if anti:
-        var_split['Variable'] = var_split.drop(var_split.columns[ids_index], axis = 1).apply(lambda x: delimiter.join(x), axis=1)
+        var_split['Variable'] = var_split.drop(var_split.columns[ids_index], axis=1).apply(lambda x: delimiter.join(x), axis=1)
     else:
-        var_split['Variable'] = var_split.filter(var_split.columns[ids_index], axis = 1).apply(lambda x: delimiter.join(x), axis=1)
-    var_split['Variable']=var_split['Variable'].str.rstrip(delimiter)    
+        var_split['Variable'] = var_split.filter(var_split.columns[ids_index], axis=1).apply(lambda x: delimiter.join(x), axis=1)
+    var_split['Variable'] = var_split['Variable'].str.rstrip(delimiter)
     return (var_split['Variable'])
-
