@@ -30,7 +30,7 @@ def create_base(variable, date_input, freq, increasing=False, negative=False, pe
     if isinstance(variable, (np.ndarray, list, pd.Series)):
         df = pd.DataFrame({"variable": variable, "date_input": date_input, "freq": freq,
                            "increasing": increasing, "negative": negative, "periods": periods, "panel": panel})
-        base_df = (df.apply(lambda row: create_base_(row[0],
+        base_df = (df.apply(lambda row: dp.create_base_(row[0],
                                                         row[1],
                                                         row[2],
                                                         increasing=row[3],

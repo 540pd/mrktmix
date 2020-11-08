@@ -72,11 +72,11 @@ def create_base_(variable, date_input, freq, increasing=False, negative=False, p
                                       freq=freq)
     else:
         base_df_index = pd.to_datetime([i for i in date_input if not pd.isnull(i)]).unique()
-        
+
     if panel is not None:
         base_df_index = pd.MultiIndex.from_tuples(list(zip([panel] * len(base_df_index), base_df_index)))
     base_df_index.freq = None
-    
+
     base_df = pd.Series(1, index=base_df_index, name=variable)
     if increasing:
         base_df = base_df.cumsum()
