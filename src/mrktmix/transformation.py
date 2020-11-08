@@ -9,7 +9,7 @@ def create_base(variable, date_input, freq, increasing=False, negative=False, pe
 
     :param variable: Name of variables
     :type variable: list
-    :param date_input: List of string, list and tuble of Dates used in base variable. If input type is str, periods and freq will be used
+    :param date_input: List of string, list or tuple of Dates used in base variable. If input type is str, periods and freq will be used
      to determine length of date. If input type is list, these dates will be used for base. If input type is tuple, the dates in the tuple
      will behave like range for date
     :type date_input: list
@@ -27,10 +27,10 @@ def create_base(variable, date_input, freq, increasing=False, negative=False, pe
     :return: pandas DataFrame with date and panel index
     :rtype: pandas.DataFrame
     """
-    if isinstance(variable, (np.ndarray, list)):
+    if isinstance(variable, (np.ndarray, list, pd.Series)):
         df = pd.DataFrame({"variable": variable, "date_input": date_input, "freq": freq,
                            "increasing": increasing, "negative": negative, "periods": periods, "panel": panel})
-        base_df = (df.apply(lambda row: dp.create_base_(row[0],
+        base_df = (df.apply(lambda row: create_base_(row[0],
                                                         row[1],
                                                         row[2],
                                                         increasing=row[3],
@@ -358,7 +358,7 @@ def assess_error(dep_decompose):
     :rtype: pandas.DataFrame
     """
     dep = dep_decompose.sum(axis=1).rename("Dependent")
-    pred = dep_decompose.drop("Residual", axis=1).sum(axis=1).rename("Predicted")
+    pred = dep_decompose.drop("Residual", axis=1, level=-4).sum(axis=1).rename("Predicted")
     residual = (dep - pred).rename("Error")
     residual_perc = (residual / dep).rename("Error %")
     return(pd.concat([dep, pred, residual, residual_perc], axis=1))

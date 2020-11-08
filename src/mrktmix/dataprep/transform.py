@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import datetime
 from scipy.ndimage.interpolation import shift
 from scipy.signal import lfilter
 
@@ -61,20 +62,21 @@ def create_base_(variable, date_input, freq, increasing=False, negative=False, p
     :return: pandas Series with date and panel index
     :rtype: pandas.Series
     """
-
     if isinstance(date_input, tuple):
         base_df_index = pd.date_range(start=date_input[0],
                                       end=date_input[1],
                                       freq=freq)
-    elif isinstance(date_input, str):
+    elif isinstance(date_input, (str, datetime.date)):
         base_df_index = pd.date_range(start=date_input,
                                       periods=periods,
                                       freq=freq)
     else:
-        base_df_index = pd.to_datetime(date_input)
+        base_df_index = pd.to_datetime([i for i in date_input if not pd.isnull(i)]).unique()
+        
     if panel is not None:
         base_df_index = pd.MultiIndex.from_tuples(list(zip([panel] * len(base_df_index), base_df_index)))
     base_df_index.freq = None
+    
     base_df = pd.Series(1, index=base_df_index, name=variable)
     if increasing:
         base_df = base_df.cumsum()
