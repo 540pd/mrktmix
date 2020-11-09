@@ -71,7 +71,6 @@ def aggregate_data(mdl_data, panel_agg={}, variable_agg={}, metric_index_var=[-1
     :return: modeling dataframe after aggregation at panel and variable level
     :rtype: pandas.DataFrame
     """
-
     # check if one variable is mapped to multiple aggregate panel
     mapped_panels = [j for i in [*panel_agg.values()] for j in i]
     multiple_mapped_panels = [i for i in mapped_panels if mapped_panels.count(i) > 1]
@@ -93,19 +92,35 @@ def aggregate_data(mdl_data, panel_agg={}, variable_agg={}, metric_index_var=[-1
     _ = [panel_agg_reverse.update({val_item: key}) for key, val in panel_agg.items() for val_item in val]
     # find variables for mean summary
     mdl_data_renamed = mdl_data.rename(index=panel_agg_reverse, columns=variable_agg_reverse)
-    mean_vars = dp.parse_variable(pd.Series(mdl_data_renamed.columns, index=mdl_data_renamed.columns),
-                                  metric_index_var,
-                                  delimiter=delimeter,
-                                  anti=False).isin(metric_mean_code)
+    # mean_vars = dp.parse_variable(pd.Series(mdl_data_renamed.columns, index=mdl_data_renamed.columns),
+    #                               metric_index_var,
+    #                               delimiter=delimeter,
+    #                               anti=False).isin(metric_mean_code)
+    mean_vars = dp.parse_variable(
+        pd.Series(
+            mdl_data_renamed.columns.get_level_values(0),
+            index=mdl_data_renamed.columns.get_level_values(0)),
+        metric_index_var,
+        delimiter=delimeter,
+        anti=False).isin(metric_mean_code)
     # sum aggregation
-    sum_agg = (mdl_data_renamed.loc[:, [*~np.isin(np.array(mdl_data_renamed.columns), np.array([*mean_vars[mean_vars.values].index]))]]
+    # sum_agg = (mdl_data_renamed.loc[:, [*~np.isin(np.array(mdl_data_renamed.columns), np.array([*mean_vars[mean_vars.values].index]))]]
+    #            .sum(level=list(range(mdl_data_renamed.index.nlevels)))
+    #            .sum(axis=1, level=0))
+    sum_agg = (mdl_data_renamed.loc[:, [*~np.isin(np.array(mdl_data_renamed.columns.get_level_values(0)),
+                                                  np.array([*mean_vars[mean_vars.values].index]))]]
                .sum(level=list(range(mdl_data_renamed.index.nlevels)))
-               .sum(axis=1, level=0))
+               .sum(axis=1, level=list(range(0, mdl_data_renamed.columns.nlevels))))
+
     # mean aggregation
     if len([*mean_vars[mean_vars.values].index]):
+        #     mean_agg = (mdl_data_renamed[[*mean_vars[mean_vars.values].index]]
+        #                 .mean(level=mdl_data_renamed.index.names)
+        #                 .mean(axis=1, level=0))
+        #     agg_mdl_data = pd.concat([sum_agg, mean_agg], axis=1)
         mean_agg = (mdl_data_renamed[[*mean_vars[mean_vars.values].index]]
                     .mean(level=mdl_data_renamed.index.names)
-                    .mean(axis=1, level=0))
+                    .mean(axis=1, level=list(range(0, mdl_data_renamed.columns.nlevels))))
         agg_mdl_data = pd.concat([sum_agg, mean_agg], axis=1)
     else:
         agg_mdl_data = sum_agg
@@ -153,8 +168,9 @@ def segregate_data(aggregated_data, segregated_data, panel_agg={}, variable_agg=
     for agg_var, seg_vars in variable_agg_subset.items():
         var_level_segg_temp = dp.segregate_variable(aggregated_data[agg_var], panel_level_seg_agg[seg_vars], match_sum=match_sum)
         var_level_segg = pd.concat([var_level_segg, var_level_segg_temp], axis=1)
-    var_level_segg_all = pd.concat(
-        [var_level_segg, aggregated_data.loc[:, aggregated_data.columns.isin(panel_level_seg_agg.columns)]], axis=1)
+    var_level_segg_all = pd.concat([var_level_segg, aggregated_data.loc[:, aggregated_data.columns.isin(
+        panel_level_seg_agg.columns) & ~aggregated_data.columns.isin(variable_agg_subset.keys())]], axis=1)
+
     # Panel level segregation on variable level segregated data
     panel_level_segg = pd.DataFrame()
     for agg_panel, seg_panel in panel_agg_subset.items():
