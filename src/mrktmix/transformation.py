@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 
+from mrktmix import data_create as dc
 from mrktmix.dataprep import transform as dp
 
 
@@ -96,17 +97,13 @@ def aggregate_data(mdl_data, panel_agg={}, variable_agg={}, metric_index_var=[-1
     #                               metric_index_var,
     #                               delimiter=delimeter,
     #                               anti=False).isin(metric_mean_code)
-    mean_vars = dp.parse_variable(
+    mean_vars = dc.parse_variable(
         pd.Series(
             mdl_data_renamed.columns.get_level_values(0),
             index=mdl_data_renamed.columns.get_level_values(0)),
         metric_index_var,
         delimiter=delimeter,
         anti=False).isin(metric_mean_code)
-    # sum aggregation
-    # sum_agg = (mdl_data_renamed.loc[:, [*~np.isin(np.array(mdl_data_renamed.columns), np.array([*mean_vars[mean_vars.values].index]))]]
-    #            .sum(level=list(range(mdl_data_renamed.index.nlevels)))
-    #            .sum(axis=1, level=0))
     sum_agg = (mdl_data_renamed.loc[:, [*~np.isin(np.array(mdl_data_renamed.columns.get_level_values(0)),
                                                   np.array([*mean_vars[mean_vars.values].index]))]]
                .sum(level=list(range(mdl_data_renamed.index.nlevels)))
@@ -114,10 +111,6 @@ def aggregate_data(mdl_data, panel_agg={}, variable_agg={}, metric_index_var=[-1
 
     # mean aggregation
     if len([*mean_vars[mean_vars.values].index]):
-        #     mean_agg = (mdl_data_renamed[[*mean_vars[mean_vars.values].index]]
-        #                 .mean(level=mdl_data_renamed.index.names)
-        #                 .mean(axis=1, level=0))
-        #     agg_mdl_data = pd.concat([sum_agg, mean_agg], axis=1)
         mean_agg = (mdl_data_renamed[[*mean_vars[mean_vars.values].index]]
                     .mean(level=mdl_data_renamed.index.names)
                     .mean(axis=1, level=list(range(0, mdl_data_renamed.columns.nlevels))))

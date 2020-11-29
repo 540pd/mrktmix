@@ -1,6 +1,7 @@
+import datetime
+
 import numpy as np
 import pandas as pd
-import datetime
 from scipy.ndimage.interpolation import shift
 from scipy.signal import lfilter
 
@@ -138,32 +139,3 @@ def segregate_panel(aggregated_data, segregated_data, match_sum=True):
     else:
         segregate_df_final = segregate_df
     return(segregate_df_final)
-
-
-def parse_variable(Name_series, ids_index, delimiter="_", anti=False):
-    """
-    Get new id/code based on id_index after splitting on given delimeter.
-
-    :param Name_series: pandas series values will be splitted based on delimiter to find relevent ids index
-    :type Name_series: pandas.Series
-    :param ids_index: index in Name_series to be extracted after splitting by delimiter
-    :type ids_index: list of integer
-    :param delimiter: delimiter used in Name_series
-    :type delimiter: string
-    :param anti: index representing metric variable in description variables
-    :type anti: bool
-    :return: return matching ids after spliting by delimiter on Name_series
-    :rtype: pandas.Series
-    """
-
-    if max(ids_index) < 0:
-        var_split = Name_series.str.rsplit(pat=delimiter, n=max(map(abs, ids_index)), expand=True)
-    else:
-        var_split = Name_series.str.split(pat=delimiter, expand=True)
-    var_split[var_split.isna()] = ""
-    if anti:
-        var_split['Variable'] = var_split.drop(var_split.columns[ids_index], axis=1).apply(lambda x: delimiter.join(x), axis=1)
-    else:
-        var_split['Variable'] = var_split.filter(var_split.columns[ids_index], axis=1).apply(lambda x: delimiter.join(x), axis=1)
-    var_split['Variable'] = var_split['Variable'].str.rstrip(delimiter)
-    return (var_split['Variable'])

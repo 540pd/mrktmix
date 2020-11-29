@@ -9,13 +9,13 @@ from mrktmix.dataprep import mdl_data as raw_dp
 def test_generate_code():
     # test default value
     random.seed(999)
-    assert raw_dp.generate_code() == 'F85'
+    assert raw_dp.generate_code(3) == '2C5'
     # test with given code length
     random.seed(999)
-    assert raw_dp.generate_code(code_length=5) == 'F854I'
+    assert raw_dp.generate_code(5) == '2C5UR'
     # test with given chars
     random.seed(999)
-    assert raw_dp.generate_code(code_length=5, chars="ABC") == 'CACCC'
+    assert raw_dp.generate_code(5, chars="ABC") == 'CACBB'
 
 
 def test_apply_mapping():
@@ -24,12 +24,13 @@ def test_apply_mapping():
                         'Channel': {0: 'TV_Free', 1: 'TV_free', 2: 'TV', 3: 'TV'},
                         'Metric': {0: 'GRp', 1: 'Spend', 2: 'GRP', 3: 'GRP'}}
     long_format_data = pd.DataFrame.from_dict(long_format_data)
-    output_data = {'Panel': {0: 'panel1', 1: 'panel1', 2: 'panel1', 3: 'panel1'},
-                   'Channel': {0: 'TV_Free', 1: 'TV_free', 2: 'TV', 3: 'TV'},
-                   'Metric': {0: 'GRp', 1: 'Spend', 2: 'GRP', 3: 'GRP'},
-                   '_Variable_': {0: 'ZOZ_4IU', 1: 'ERB_GMJ', 2: 'QDQ_F85', 3: 'QDQ_F85'}}
+    output_data = {
+        'Panel': {0: 'panel1', 1: 'panel1', 2: 'panel1', 3: 'panel1'},
+        'Channel': {0: 'TV_Free', 1: 'TV_free', 2: 'TV', 3: 'TV'},
+        'Metric': {0: 'GRp', 1: 'Spend', 2: 'GRP', 3: 'GRP'},
+        '_Variable_': {0: 'EVE_RRG', 1: 'ETE_SPE', 2: 'TVT_PGP', 3: 'TVT_PGP'}}
     output_data = pd.DataFrame.from_dict(output_data)
-    output_dict = {'GRP': 'F85', 'GRp': '4IU', 'Spend': 'GMJ', 'TV': 'QDQ', 'TV_Free': 'ZOZ', 'TV_free': 'ERB'}
+    output_dict = {'Spend': 'SPE', 'TV': 'TVT', 'GRP': 'PGP', 'GRp': 'RRG', 'TV_Free': 'EVE', 'TV_free': 'ETE'}
     random.seed(999)
     mapped_data, description_mapping = raw_dp.apply_mapping(
         long_format_data, ['Channel', 'Metric'], delimeter="_", description2code={}, case_sensitive=True)
@@ -41,12 +42,13 @@ def test_apply_mapping():
                         'Channel': {0: 'TV_Free', 1: 'TV_free', 2: 'TV', 3: 'TV'},
                         'Metric': {0: 'GRp', 1: 'Spend', 2: 'GRP', 3: 'GRP'}}
     long_format_data = pd.DataFrame.from_dict(long_format_data)
-    output_data = {'Panel': {0: 'panel1', 1: 'panel1', 2: 'panel1', 3: 'panel1'},
-                   'Channel': {0: 'TV_Free', 1: 'TV_free', 2: 'TV', 3: 'TV'},
-                   'Metric': {0: 'GRp', 1: 'Spend', 2: 'GRP', 3: 'GRP'},
-                   '_Variable_': {0: 'ZOZ_F85', 1: 'ZOZ_GMJ', 2: 'QDQ_F85', 3: 'QDQ_F85'}}
+    output_data = {
+        'Panel': {0: 'panel1', 1: 'panel1', 2: 'panel1', 3: 'panel1'},
+        'Channel': {0: 'TV_Free', 1: 'TV_free', 2: 'TV', 3: 'TV'},
+        'Metric': {0: 'GRp', 1: 'Spend', 2: 'GRP', 3: 'GRP'},
+        '_Variable_': {0: 'EVE_PGP', 1: 'EVE_SPE', 2: 'TVT_PGP', 3: 'TVT_PGP'}}
     output_data = pd.DataFrame.from_dict(output_data)
-    output_dict = {'GRP': 'F85', 'GRp': 'F85', 'Spend': 'GMJ', 'TV': 'QDQ', 'TV_Free': 'ZOZ', 'TV_free': 'ZOZ'}
+    output_dict = {'Spend': 'SPE', 'TV': 'TVT', 'GRP': 'PGP', 'GRp': 'PGP', 'TV_Free': 'EVE', 'TV_free': 'EVE'}
     random.seed(999)
     mapped_data, description_mapping = raw_dp.apply_mapping(
         long_format_data, ['Channel', 'Metric'], delimeter="_", description2code={}, case_sensitive=False)
@@ -58,12 +60,13 @@ def test_apply_mapping():
                         'Channel': {0: 'TV_Free', 1: 'TV_free', 2: 'TV', 3: 'TV'},
                         'Metric': {0: 'GRp', 1: 'Spend', 2: 'GRP', 3: 'GRP'}}
     long_format_data = pd.DataFrame.from_dict(long_format_data)
-    output_data = {'Panel': {0: 'panel1', 1: 'panel1', 2: 'panel1', 3: 'panel1'},
-                   'Channel': {0: 'TV_Free', 1: 'TV_free', 2: 'TV', 3: 'TV'},
-                   'Metric': {0: 'GRp', 1: 'Spend', 2: 'GRP', 3: 'GRP'},
-                   '_Variable_': {0: 'ZOZ.F85', 1: 'ZOZ.GMJ', 2: 'QDQ.F85', 3: 'QDQ.F85'}}
+    output_data = {
+        'Panel': {0: 'panel1', 1: 'panel1', 2: 'panel1', 3: 'panel1'},
+        'Channel': {0: 'TV_Free', 1: 'TV_free', 2: 'TV', 3: 'TV'},
+        'Metric': {0: 'GRp', 1: 'Spend', 2: 'GRP', 3: 'GRP'},
+        '_Variable_': {0: 'EVE.PGP', 1: 'EVE.SPE', 2: 'TVT.PGP', 3: 'TVT.PGP'}}
     output_data = pd.DataFrame.from_dict(output_data)
-    output_dict = {'GRP': 'F85', 'GRp': 'F85', 'Spend': 'GMJ', 'TV': 'QDQ', 'TV_Free': 'ZOZ', 'TV_free': 'ZOZ'}
+    output_dict = {'Spend': 'SPE', 'TV': 'TVT', 'GRP': 'PGP', 'GRp': 'PGP', 'TV_Free': 'EVE', 'TV_free': 'EVE'}
     random.seed(999)
     mapped_data, description_mapping = raw_dp.apply_mapping(
         long_format_data, ['Channel', 'Metric'], delimeter=".", description2code={}, case_sensitive=False)
@@ -75,17 +78,13 @@ def test_apply_mapping():
                         'Channel': {0: 'TV_Free', 1: 'TV_free', 2: 'TV', 3: 'TV'},
                         'Metric': {0: 'GRp', 1: 'Spend', 2: 'GRP', 3: 'GRP'}}
     long_format_data = pd.DataFrame.from_dict(long_format_data)
-    output_data = {'Panel': {0: 'panel1', 1: 'panel1', 2: 'panel1', 3: 'panel1'},
-                   'Channel': {0: 'TV_Free', 1: 'TV_free', 2: 'TV', 3: 'TV'},
-                   'Metric': {0: 'GRp', 1: 'Spend', 2: 'GRP', 3: 'GRP'},
-                   '_Variable_': {0: 'GMJ.F85', 1: 'QDQ.4IU', 2: 'tv.TV_GRP', 3: 'tv.TV_GRP'}}
+    output_data = {
+        'Panel': {0: 'panel1', 1: 'panel1', 2: 'panel1', 3: 'panel1'},
+        'Channel': {0: 'TV_Free', 1: 'TV_free', 2: 'TV', 3: 'TV'},
+        'Metric': {0: 'GRp', 1: 'Spend', 2: 'GRP', 3: 'GRP'},
+        '_Variable_': {0: 'ETE.GRP', 1: 'RFT.SPE', 2: 'tv.TV_GRP', 3: 'tv.TV_GRP'}}
     output_data = pd.DataFrame.from_dict(output_data)
-    output_dict = {'GRP': 'TV_GRP',
-                   'TV': 'tv',
-                   'GRp': 'F85',
-                   'Spend': '4IU',
-                   'TV_Free': 'GMJ',
-                   'TV_free': 'QDQ'}
+    output_dict = {'GRP': 'TV_GRP', 'TV': 'tv', 'GRp': 'GRP', 'Spend': 'SPE', 'TV_Free': 'ETE', 'TV_free': 'RFT'}
     random.seed(999)
     mapped_data, description_mapping = raw_dp.apply_mapping(
         long_format_data, [
@@ -99,17 +98,13 @@ def test_apply_mapping():
                         'Channel': {0: 'TV_Free', 1: 'TV_free', 2: 'TV', 3: 'TV'},
                         'Metric': {0: 'GRp', 1: 'Spend', 2: 'GRP', 3: 'GRP'}}
     long_format_data = pd.DataFrame.from_dict(long_format_data)
-    output_data = {'Panel': {0: 'panel1', 1: 'panel1', 2: 'panel1', 3: 'panel1'},
-                   'Channel': {0: 'TV_Free', 1: 'TV_free', 2: 'TV', 3: 'TV'},
-                   'Metric': {0: 'GRp', 1: 'Spend', 2: 'GRP', 3: 'GRP'},
-                   '_Variable_': {0: '4IU.TV_GRP', 1: '4IU.F85', 2: 'tv.TV_GRP', 3: 'tv.TV_GRP'}}
+    output_data = {
+        'Panel': {0: 'panel1', 1: 'panel1', 2: 'panel1', 3: 'panel1'},
+        'Channel': {0: 'TV_Free', 1: 'TV_free', 2: 'TV', 3: 'TV'},
+        'Metric': {0: 'GRp', 1: 'Spend', 2: 'GRP', 3: 'GRP'},
+        '_Variable_': {0: 'ETE.TV_GRP', 1: 'ETE.SPE', 2: 'tv.TV_GRP', 3: 'tv.TV_GRP'}}
     output_data = pd.DataFrame.from_dict(output_data)
-    output_dict = {'GRP': 'TV_GRP',
-                   'GRp': 'TV_GRP',
-                   'TV': 'tv',
-                   'Spend': 'F85',
-                   'TV_Free': '4IU',
-                   'TV_free': '4IU'}
+    output_dict = {'GRP': 'TV_GRP', 'GRp': 'TV_GRP', 'TV': 'tv', 'Spend': 'SPE', 'TV_Free': 'ETE', 'TV_free': 'ETE'}
     random.seed(999)
     mapped_data, description_mapping = raw_dp.apply_mapping(long_format_data, ['Channel', 'Metric'], delimeter=".", description2code={
                                                             'GRP': 'TV_GRP', "TV": "tv", "TV": "tv"}, case_sensitive=False)

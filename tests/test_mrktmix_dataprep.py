@@ -35,20 +35,6 @@ def test_apply_apl_series():
     pd.testing.assert_series_equal(output_single, dp.apply_apl_series(df, 0.5, .7, 1))
 
 
-def test_parse_variable():
-    # Example with two constants
-    data = pd.Series(np.array(['d1_t1_a1_b1_m1', 'd2_t2_a2_b2_m2', 'd3_t3_a3_b3_m3', 'd4_t4_a4_b4_m4', 'd5_t5_a5_b5_m5']), name='Variables')
-    data.index = data.values
-    output_data = pd.Series(np.array(['b1_t1', 'b2_t2', 'b3_t3', 'b4_t4', 'b5_t5']), index=data.index)
-    pd.testing.assert_series_equal(dp.parse_variable(data, [3, 1], delimiter="_"), output_data.rename("Variable"))
-
-    # Example with one constants
-    data = pd.Series(np.array(['d1_t1_a1_b1_m1', 'd2_t2_a2_b2_m2', 'd3_t3_a3_b3_m3', 'd4_t4_a4_b4_m4', 'd5_t5_a5_b5_m5']), name='Variables')
-    data.index = data.values
-    output_data = pd.Series(np.array(['b1', 'b2', 'b3', 'b4', 'b5']), index=data.index)
-    pd.testing.assert_series_equal(dp.parse_variable(data, [3], delimiter="_"), output_data.rename("Variable"))
-
-
 def test_segregate_variable():
     # simple case
     aggregated_data = pd.Series([51, 72, 51, 19, 47, 39, 33], pd.date_range("2020-01-01", "2020-01-07"), name="ABC")

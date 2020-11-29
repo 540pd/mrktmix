@@ -1,3 +1,6 @@
+from collections import defaultdict
+
+import numpy as np
 import pandas as pd
 
 from mrktmix.dataprep import mdl_data as dc
@@ -14,7 +17,8 @@ def create_mdldata(
         delimeter="_",
         code_length=3,
         case_sensitive=False,
-        iteratively=False):
+        iteratively=False,
+        verbose=False):
     """
     Covert list of input files into modeling data.
 
@@ -42,8 +46,8 @@ def create_mdldata(
     :param iteratively: whether modeling data processing should be done filewise or not (append data and process it in single pass)
     :type iteratively: bool
     :return: modeling dataframe with panel variable as row index and variable_name as variable. Second item of tuple represents
-    mapping from description to code. Third item of tuple represents mapping from file to variables
-    :rtype: tuples of pandas.DataFrame, dictionary, dictionary
+    mapping from description to code. Third item of tuple represents mapping file (description of variable)
+    :rtype: tuples of pandas.DataFrame, dictionary, pandas.DataFrame
     """
 
     description2code_agg = description2code.copy()
@@ -51,6 +55,8 @@ def create_mdldata(
     if iteratively:
         mdl_data = pd.DataFrame()
         for name_df, input_df in input_files.items():
+            if verbose:
+                print(name_df)
             mapped_data, des2code = dc.apply_mapping(
                 input_df,
                 description_variables,
@@ -60,9 +66,9 @@ def create_mdldata(
             description2code_agg.update(des2code)
             mapped_data["_File_"] = name_df
             file_mapping = file_mapping.append((
-                    mapped_data[["_File_", "_Variable_", *description_variables]]
-                    .drop_duplicates()
-                    .set_index(["_File_", "_Variable_"])))
+                mapped_data[["_File_", "_Variable_", *description_variables]]
+                .drop_duplicates()
+                .set_index(["_File_", "_Variable_"])))
             mdl_df = dc.long2wide(
                 mapped_data,
                 panel_variables,
@@ -120,3 +126,97 @@ def spread_notna(input_df, prior=True):
         return(input_df.div(adj_factor).bfill())
     else:
         return(input_df.div(adj_factor).ffill())
+
+
+def parse_variable(Name_series, ids_index, delimiter="_", anti=False):
+    """
+    Get new id/code based on id_index after splitting on given delimeter.
+
+    :param Name_series: pandas series values will be splitted based on delimiter to find relevent ids index
+    :type Name_series: pandas.Series
+    :param ids_index: index in Name_series to be extracted after splitting by delimiter
+    :type ids_index: list of integer
+    :param delimiter: delimiter used in Name_series
+    :type delimiter: string
+    :param anti: index representing metric variable in description variables
+    :type anti: bool
+    :return: return matching ids after spliting by delimiter on Name_series
+    :rtype: pandas.Series
+    """
+
+    if max(ids_index) < 0:
+        var_split = Name_series.str.rsplit(pat=delimiter, n=max(map(abs, ids_index)), expand=True)
+    else:
+        var_split = Name_series.str.split(pat=delimiter, expand=True)
+    var_split[var_split.isna()] = ""
+    if anti:
+        var_split['Variable'] = var_split.drop(var_split.columns[ids_index], axis=1).apply(lambda x: delimiter.join(x), axis=1)
+    else:
+        var_split['Variable'] = var_split.filter(var_split.columns[ids_index], axis=1).apply(lambda x: delimiter.join(x), axis=1)
+    var_split['Variable'] = var_split['Variable'].str.rstrip(delimiter)
+    return (var_split['Variable'])
+
+
+def aggregate_rows(Dataset, metric2smry_func, metric_column, value_column, case_senstive=False, print_suffix="\t"):
+    """
+    Returns the data frame file after removing all the duplicates & grouping it according to metric summary dictionary
+
+    :param Dataset: input dataset to be aggregated
+    :type Dataset: pandas.DataFrame
+    :param metric2smry_func: dictionary with keys as metric columns and summary function as values
+    :type metric2smry_func: Dictionary
+    :param metric_column: Name of Metric column on which metric2smry_func will match keys for aggregation
+    :type metric_column: String
+    :param value_column: Numeric variable in Dataset on which summary will be applied
+    :type value_column: String
+    :param case_senstive: whether keys of metric2smry will case senstive match or not
+    :type case_senstive: bool
+    :param print_suffix: space between first column and message printed
+    :type print_suffix: string
+    :return: aggregated data after applying metric2smry_func on metric_column and summarise value_column
+    :rtype: pandas.DataFrame
+    """
+
+    # Find if aggregation is required in data
+    duplicate_ids = Dataset.duplicated(subset=[*Dataset.columns.difference([value_column])], keep=False)
+    # Aggregation of Data with duplicate ids
+    df_duplicates = Dataset[duplicate_ids].copy()
+    if df_duplicates.shape[0] != 0:
+        if not case_senstive:
+            metric2smry_func.update({k.title(): v for k, v in metric2smry_func.items()})
+            [metric2smry_func.update({(i, metric2smry_func[i.title()])}) for i in df_duplicates[metric_column].unique()
+             if i.title() in list(metric2smry_func)]  # same code without considering case
+        print(print_suffix + "Shape of duplicate record is", df_duplicates.shape)
+        smry_fun_navl = ~np.isin(df_duplicates[metric_column].unique(), list(metric2smry_func.keys()))
+        if sum(smry_fun_navl):
+            print("List of metric summary function not available in input dictionary. Please update it.",
+                  "\n\t", df_duplicates[metric_column].unique()[smry_fun_navl],)
+            raise Exception('Please update mapping dictionary.')
+        else:
+            df_duplicates["smry_func"] = df_duplicates[metric_column].replace(metric2smry_func)
+            df_duplicates = (pd.concat([df.groupby([*Dataset.columns.difference([value_column]),
+                                                    "smry_func"]).agg(smry_f) for smry_f,
+                                        df in df_duplicates[[*Dataset.columns.difference([value_column]),
+                                                             value_column,
+                                                             "smry_func"]].groupby("smry_func")],
+                                       sort=False) .reset_index() .drop(["smry_func"],
+                                                                        axis=1))
+    return pd.concat([Dataset[~duplicate_ids], df_duplicates], sort=False)
+
+
+def reserve_dict(inputdict, concatenate="|"):
+    '''
+    Inserve dictionary. If there are duplicate values then it concatenate string to combine values
+
+    :param inputdict: dictionary to be reversed
+    :type inputdict: dictionary
+    :param concatenate: string to be used if there are duplicate values in dictionary to concatenate
+    values of reversed dictionary. Default value is '|'
+    :type concatenate: string
+    :return: aggregated data after applying metric2smry_func on metric_column and summarise value_column
+    :rtype: dictionary
+    '''
+    reversed_dict = defaultdict(list)
+    for key, value in inputdict.items():
+        reversed_dict[value].append(key)
+    return({key: concatenate.join(value) for key, value in reversed_dict.items()})

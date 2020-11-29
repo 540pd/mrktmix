@@ -4,18 +4,18 @@ import numpy as np
 import pandas as pd
 
 
-def generate_code(code_length=3, chars='ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'):
+def generate_code(code_length, chars='ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'):
     """
     Generate random code from ascii and digits based character length
 
-    :param code_length: length of code to be generated. default value is 3
+    :param code_length: length of code to be generated.
     :type code_length: int
     :param chars: characters from which random literals will be selected
     :type chars: string
     :return: random slected literal of length given in code length from chars
     :rtype: string
     """
-    return ''.join(random.choice(chars) for x in range(code_length))
+    return (''.join(random.choices(chars, k=code_length)))
 
 
 def apply_mapping(long_format_data, description_variables, code_length=3, delimeter="_", description2code={}, case_sensitive=False):
@@ -55,15 +55,26 @@ def apply_mapping(long_format_data, description_variables, code_length=3, delime
     des2code_keep = {}
     if len(new_description):
         des2code_new = {}
+        avoid_infinite_loop = 1
         while True:
             # generate code
-            des2code_generate = pd.Series(np.nan, index=new_description).apply(lambda x: generate_code(code_length=code_length))
+            series4code = pd.Series(new_description, index=new_description).replace(r'\W|_', '', regex=True)
+            if avoid_infinite_loop == 1:
+                des2code_generate = (series4code * ((code_length / series4code.str.len()).apply(np.ceil)
+                                                    ).astype(int)).str[:code_length].str.upper()
+            elif avoid_infinite_loop == 2:
+                des2code_generate = series4code.apply(lambda x: generate_code(code_length, x.upper()))
+            elif avoid_infinite_loop == 3:
+                des2code_generate = series4code.apply(lambda x: generate_code(code_length, "ABCDEFGHIJKLMNOPQRSTUVWXYZ"))
+            else:
+                des2code_generate = series4code.apply(lambda x: generate_code(code_length, "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"))
             # check if code is duplicate or exists in original description to code mapping
             des_code_dup = des2code_generate.isin(des2code.values()) | des2code_generate.duplicated(keep=False)
             # Finalize mapping if duplicate is not present
             des2code_new.update(des2code_generate[~des_code_dup].to_dict())
             # update new description if duplicate codes are present
             new_description = des_code_dup[des_code_dup].index
+            avoid_infinite_loop = avoid_infinite_loop + 1
             # break loop if no new description is present
             if not(des_code_dup.sum()):
                 break
