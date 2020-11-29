@@ -211,7 +211,7 @@ def reserve_dict(inputdict, concatenate="|"):
     :param inputdict: dictionary to be reversed
     :type inputdict: dictionary
     :param concatenate: string to be used if there are duplicate values in dictionary to concatenate
-    values of reversed dictionary. Default value is '|'
+    values of reversed dictionary. Default value is '|'. If concatenate is None, values will be in form of list
     :type concatenate: string
     :return: aggregated data after applying metric2smry_func on metric_column and summarise value_column
     :rtype: dictionary
@@ -219,7 +219,10 @@ def reserve_dict(inputdict, concatenate="|"):
     reversed_dict = defaultdict(list)
     for key, value in inputdict.items():
         reversed_dict[value].append(key)
-    return({key: concatenate.join(value) for key, value in reversed_dict.items()})
+    if concatenate is None:
+        return(dict(reversed_dict))
+    else:
+        return({key: concatenate.join(value) for key, value in reversed_dict.items()})
 
 
 def update_description(description_input, new_code, new_description, delimeter="_", index=[], old_code=[]):
