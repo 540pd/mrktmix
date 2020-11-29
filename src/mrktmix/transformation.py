@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-from mrktmix import data_create as dc
+from mrktmix.data_create import parse_variable
 from mrktmix.dataprep import transform as dp
 
 
@@ -93,11 +93,7 @@ def aggregate_data(mdl_data, panel_agg={}, variable_agg={}, metric_index_var=[-1
     _ = [panel_agg_reverse.update({val_item: key}) for key, val in panel_agg.items() for val_item in val]
     # find variables for mean summary
     mdl_data_renamed = mdl_data.rename(index=panel_agg_reverse, columns=variable_agg_reverse)
-    # mean_vars = dp.parse_variable(pd.Series(mdl_data_renamed.columns, index=mdl_data_renamed.columns),
-    #                               metric_index_var,
-    #                               delimiter=delimeter,
-    #                               anti=False).isin(metric_mean_code)
-    mean_vars = dc.parse_variable(
+    mean_vars = parse_variable(
         pd.Series(
             mdl_data_renamed.columns.get_level_values(0),
             index=mdl_data_renamed.columns.get_level_values(0)),

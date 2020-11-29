@@ -20,6 +20,76 @@ def test_parse_variable():
     pd.testing.assert_series_equal(mmm.parse_variable(data, [3], delimiter="_"), output_data.rename("Variable"))
 
 
+def test_update_description():
+    # Input
+    file_map = pd.DataFrame(np.array([['TV_Free', 'GRp'],
+                                      ['TV_Free', 'Spend'],
+                                      ['TV_Free', 'GRP'],
+                                      ['TV_Free', 'SpenD'],
+                                      ['TV_Free', 'gRP']]),
+                            index=pd.Index([('TV_PGP'),
+                                            ('TV_SPD'),
+                                            ('TV_GRP'),
+                                            ('TV_SPE'),
+                                            ('TV_RRG')],
+                                           name='_Variable_'),
+                            columns=["Channel", "Metric"])
+
+    # only index is given
+    output_mapping = {'TV_PGP': 'TV_AGG',
+                      'TV_SPD': 'TV_AGG',
+                      'TV_GRP': 'TV_AGG',
+                      'TV_SPE': 'TV_AGG',
+                      'TV_RRG': 'TV_AGG'}
+    output = pd.DataFrame.from_dict({'Channel': {'TV_AGG': 'TV_Free'}, 'Metric': {'TV_AGG': 'Aggregate'}})
+    output.index.names = ["_Variable_"]
+    mapping, upd_mappingfile = mmm.update_description(file_map, "AGG", "Aggregate", delimeter="_", index=[1], old_code=[])
+    pd.testing.assert_frame_equal(upd_mappingfile, output)
+    assert mapping == output_mapping
+
+    # only old code is given
+    output_mapping = {'TV_PGP': 'TV_PGP',
+                      'TV_SPD': 'TV_AGG',
+                      'TV_GRP': 'TV_GRP',
+                      'TV_SPE': 'TV_SPE',
+                      'TV_RRG': 'TV_RRG'}
+    output = pd.DataFrame.from_dict({'Channel': {'TV_PGP': 'TV_Free',
+                                                 'TV_AGG': 'TV_Free',
+                                                 'TV_GRP': 'TV_Free',
+                                                 'TV_SPE': 'TV_Free',
+                                                 'TV_RRG': 'TV_Free'},
+                                     'Metric': {'TV_PGP': 'GRp',
+                                                'TV_AGG': 'Aggregate',
+                                                'TV_GRP': 'GRP',
+                                                'TV_SPE': 'SpenD',
+                                                'TV_RRG': 'gRP'}})
+    output.index.names = ["_Variable_"]
+    mapping, upd_mappingfile = mmm.update_description(file_map, "AGG", "Aggregate", delimeter="_", index=[], old_code=["SPD"])
+    pd.testing.assert_frame_equal(upd_mappingfile, output)
+    assert mapping == output_mapping
+
+    # both old code and index is given
+    output_mapping = {'TV_PGP': 'TV_PGP',
+                      'TV_SPD': 'TV_AGG',
+                      'TV_GRP': 'TV_GRP',
+                      'TV_SPE': 'TV_SPE',
+                      'TV_RRG': 'TV_RRG'}
+    output = pd.DataFrame.from_dict({'Channel': {'TV_PGP': 'TV_Free',
+                                                 'TV_AGG': 'TV_Free',
+                                                 'TV_GRP': 'TV_Free',
+                                                 'TV_SPE': 'TV_Free',
+                                                 'TV_RRG': 'TV_Free'},
+                                     'Metric': {'TV_PGP': 'GRp',
+                                                'TV_AGG': 'Aggregate',
+                                                'TV_GRP': 'GRP',
+                                                'TV_SPE': 'SpenD',
+                                                'TV_RRG': 'gRP'}})
+    output.index.names = ["_Variable_"]
+    mapping, upd_mappingfile = mmm.update_description(file_map, "AGG", "Aggregate", delimeter="_", index=[1], old_code=["SPD"])
+    pd.testing.assert_frame_equal(upd_mappingfile, output)
+    assert mapping == output_mapping
+
+
 def test_aggregate_rows():
     # Example one
     df = pd.DataFrame(

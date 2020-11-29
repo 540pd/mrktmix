@@ -220,3 +220,41 @@ def reserve_dict(inputdict, concatenate="|"):
     for key, value in inputdict.items():
         reversed_dict[value].append(key)
     return({key: concatenate.join(value) for key, value in reversed_dict.items()})
+
+
+def update_description(description_input, new_code, new_description, delimeter="_", index=[], old_code=[]):
+    '''
+    Update description on index by replacing old code by new code and new description.
+
+    :param description_df: description file with variable name in index and description on columns
+    :type description_df: pd.DataFrame
+    :param new_code: new code will be used inplace of old code in variable name
+    :type new_code: string
+    :param new_description: new description will be used inplace of corresponding column in description_df
+    :type new_description: string
+    :param delimeter: delimeters used in between code in variable name
+    :type delimeter: string
+    :param index: index of variable where update will be applied after spliting on delimeter. Default value is empty list. When
+    empty, update will apply on all index
+    :type index: list of integers
+    :param old_code: list of old codes present in variable which needs to be replaced
+    :type old_code: list of string
+    :return: tuple of dictionary representing old variable to new variable name and updated description data
+    :rtype: tuple of dictionary and pd.DataFrame
+    '''
+    mapping = description_input.index.to_series().str.split("_", expand=True)
+    col_rename = dict(zip(description_input.columns[0:mapping.shape[1]], range(0, mapping.shape[1])))
+    description_df = description_input.rename(columns=col_rename)
+    if len(old_code) and len(index):
+        description_df[mapping.iloc[:, index].isin(old_code)] = new_description
+        mapping.iloc[:, index] = mapping.iloc[:, index].replace(to_replace=old_code, value=new_code)
+    elif not len(old_code):
+        description_df.iloc[:, index] = new_description
+        mapping.iloc[:, index] = new_code
+    elif not len(index):
+        description_df[mapping.isin(old_code)] = new_description
+        mapping = mapping.replace(to_replace=old_code, value=new_code)
+    mapping = mapping.apply(lambda x: "_".join(x), axis=1).to_dict()
+    description_df = description_df.rename(columns=reserve_dict(col_rename), index=mapping)
+    description_df = description_df[~description_df.index.duplicated()]
+    return (mapping, description_df)
