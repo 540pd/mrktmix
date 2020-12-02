@@ -446,6 +446,19 @@ def test_create_base_granular():
     df_output = pd.Series(df, name="var1")
     pd.testing.assert_series_equal(df_output, mmm.create_base(
         "var1", ["2020-03-10", "2020-04-07"], "7D", increasing=True, negative=True, panel=None))
+    # panel is list
+    df = {pd.Timestamp('2020-03-10 00:00:00'): 1, pd.Timestamp('2020-04-07 00:00:00'): 1}
+    df_output = pd.Series(df, name="var1")
+    pd.testing.assert_series_equal(df_output, mmm.create_base(
+        "var1", ["2020-03-10", "2020-04-07"], "7D", increasing=False, negative=False, panel=None))
+    # date is list and increasing is True
+    df = {('adf', pd.Timestamp('2020-03-10 00:00:00')): 1,
+          ('adf', pd.Timestamp('2020-04-07 00:00:00')): 2,
+          ('abc', pd.Timestamp('2020-03-10 00:00:00')): 3,
+          ('abc', pd.Timestamp('2020-04-07 00:00:00')): 4}
+    df_output = pd.Series(df, name="var1")
+    pd.testing.assert_series_equal(df_output, mmm.create_base(
+        "var1", ["2020-03-10", "2020-04-07"], "7D", increasing=True, negative=False, panel=["adf", "abc"]))
     # date is tuple
     df = {pd.Timestamp('2020-03-10 00:00:00'): 1, pd.Timestamp('2020-03-17 00:00:00'): 1}
     df_output = pd.Series(df, name="var1")
@@ -481,6 +494,7 @@ def test_create_base_granular():
 
 
 def test_create_base_dataframe():
+    # Panel is list of string
     df = pd.DataFrame([["var2", ["2020-03-10", "2020-04-07"]],
                        ["var2", ("2020-03-10", "2020-04-07")],
                        ["var3", ("2020-03-10", "2020-04-06")],
@@ -526,6 +540,95 @@ def test_create_base_dataframe():
                 "panel1",
                 "panel2",
                 "panel1"]).fillna(0))
+    # Some panel are list format
+    df_dict = {'var2': {('abc',
+                         pd.Timestamp('2020-03-10 00:00:00')): 1.0,
+                        ('abc',
+                         pd.Timestamp('2020-04-07 00:00:00')): 1.0,
+                        ('mno',
+                         pd.Timestamp('2020-03-10 00:00:00')): 1.0,
+                        ('mno',
+                         pd.Timestamp('2020-04-07 00:00:00')): 1.0,
+                        ('panel1',
+                         pd.Timestamp('2020-03-10 00:00:00')): 1.0,
+                        ('panel1',
+                         pd.Timestamp('2020-03-17 00:00:00')): 1.0,
+                        ('panel1',
+                         pd.Timestamp('2020-03-24 00:00:00')): 1.0,
+                        ('panel1',
+                         pd.Timestamp('2020-03-31 00:00:00')): 1.0,
+                        ('panel1',
+                         pd.Timestamp('2020-04-07 00:00:00')): 1.0,
+                        ('panel2',
+                         pd.Timestamp('2020-03-10 00:00:00')): np.nan,
+                        ('panel2',
+                         pd.Timestamp('2020-03-17 00:00:00')): np.nan,
+                        ('panel2',
+                         pd.Timestamp('2020-03-24 00:00:00')): np.nan,
+                        ('panel2',
+                         pd.Timestamp('2020-03-31 00:00:00')): np.nan},
+               'var3': {('abc',
+                         pd.Timestamp('2020-03-10 00:00:00')): np.nan,
+                        ('abc',
+                         pd.Timestamp('2020-04-07 00:00:00')): np.nan,
+                        ('mno',
+                         pd.Timestamp('2020-03-10 00:00:00')): np.nan,
+                        ('mno',
+                         pd.Timestamp('2020-04-07 00:00:00')): np.nan,
+                        ('panel1',
+                         pd.Timestamp('2020-03-10 00:00:00')): np.nan,
+                        ('panel1',
+                         pd.Timestamp('2020-03-17 00:00:00')): np.nan,
+                        ('panel1',
+                         pd.Timestamp('2020-03-24 00:00:00')): np.nan,
+                        ('panel1',
+                         pd.Timestamp('2020-03-31 00:00:00')): np.nan,
+                        ('panel1',
+                         pd.Timestamp('2020-04-07 00:00:00')): np.nan,
+                        ('panel2',
+                         pd.Timestamp('2020-03-10 00:00:00')): 1.0,
+                        ('panel2',
+                         pd.Timestamp('2020-03-17 00:00:00')): 1.0,
+                        ('panel2',
+                         pd.Timestamp('2020-03-24 00:00:00')): 1.0,
+                        ('panel2',
+                         pd.Timestamp('2020-03-31 00:00:00')): 1.0},
+               'var4': {('abc',
+                         pd.Timestamp('2020-03-10 00:00:00')): np.nan,
+                        ('abc',
+                         pd.Timestamp('2020-04-07 00:00:00')): np.nan,
+                        ('mno',
+                         pd.Timestamp('2020-03-10 00:00:00')): np.nan,
+                        ('mno',
+                         pd.Timestamp('2020-04-07 00:00:00')): np.nan,
+                        ('panel1',
+                         pd.Timestamp('2020-03-10 00:00:00')): 1.0,
+                        ('panel1',
+                         pd.Timestamp('2020-03-17 00:00:00')): 1.0,
+                        ('panel1',
+                         pd.Timestamp('2020-03-24 00:00:00')): 1.0,
+                        ('panel1',
+                         pd.Timestamp('2020-03-31 00:00:00')): 1.0,
+                        ('panel1',
+                         pd.Timestamp('2020-04-07 00:00:00')): 1.0,
+                        ('panel2',
+                         pd.Timestamp('2020-03-10 00:00:00')): np.nan,
+                        ('panel2',
+                         pd.Timestamp('2020-03-17 00:00:00')): np.nan,
+                        ('panel2',
+                         pd.Timestamp('2020-03-24 00:00:00')): np.nan,
+                        ('panel2',
+                         pd.Timestamp('2020-03-31 00:00:00')): np.nan}}
+    pd.testing.assert_frame_equal(
+        pd.DataFrame(df_dict).fillna(0),
+        mmm.create_base(
+            df[0].values,
+            df[1].values,
+            "7D",
+            increasing=False,
+            negative=False,
+            periods=5,
+            panel=[["mno", "abc"], "panel1", "panel2", "panel1"]).fillna(0))
 
 
 def test_apply_apl():

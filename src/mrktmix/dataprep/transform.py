@@ -44,7 +44,6 @@ def apply_apl_series(df_series, adstock, power, lag):
 
 def create_base_(variable, date_input, freq, increasing=False, negative=False, periods=1, panel=None):
     """ Create dummy/base variable for modeling
-
     :param variable: Name of variable
     :type variable: str
     :param date_input: Dates used in base variable. If input type is str, periods and freq will be used to determine length of date.If
@@ -58,8 +57,8 @@ def create_base_(variable, date_input, freq, increasing=False, negative=False, p
     :type negative: bool, optional
     :param periods: Controls number of period dates will be genrated. Will only be applicable when date_input is str, defaults to 1
     :type periods: int, optional
-    :param panel: Create multiindex with panel on level 0, defaults to None
-    :type panel: str, optional
+    :param panel: Create multiindex with panel on level 0, defaults to None. If list is supplied, it will create for each panel
+    :type panel: str or list, optional
     :return: pandas Series with date and panel index
     :rtype: pandas.Series
     """
@@ -75,7 +74,10 @@ def create_base_(variable, date_input, freq, increasing=False, negative=False, p
         base_df_index = pd.to_datetime([i for i in date_input if not pd.isnull(i)]).unique()
 
     if panel is not None:
-        base_df_index = pd.MultiIndex.from_tuples(list(zip([panel] * len(base_df_index), base_df_index)))
+        if isinstance(panel, list):
+            base_df_index = pd.MultiIndex.from_product([panel, base_df_index])
+        else:
+            base_df_index = pd.MultiIndex.from_tuples(list(zip([panel] * len(base_df_index), base_df_index)))
     base_df_index.freq = None
 
     base_df = pd.Series(1, index=base_df_index, name=variable)
