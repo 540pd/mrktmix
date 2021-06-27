@@ -24,7 +24,7 @@ Modeling dataset is tabular format dataframe with variable in column and  panel 
     input_df2=pd.DataFrame.from_dict(input_df2)
     input_files={"source1":input_df1, "source2":input_df2}
     # Create modeling data
-    mdl_data, code_mapping, file_mapping = create_mdldata(input_files, ['Panel'], ["Channel", "Metric"] ,"Metric_Value", description2code={'GRP':'GRP',"Spend":'SPD',"TV_Free":"TV"})
+    mdl_data, code_mapping, file_mapping = mmm.create_mdldata(input_files, ['Panel'], ["Channel", "Metric"] ,"Metric_Value", description2code={'GRP':'GRP',"Spend":'SPD',"TV_Free":"TV"})
 
 To imput missing value where non missing value represents sum of preceding missing values::
 
@@ -97,4 +97,3 @@ Optimize spend based on revenue where :math:`Revenue = \sum_{i=0}^{N} Coefficien
     optimized_revenue
     # Optimized Status whether the algorithm converged or not
     optimized_status
-	

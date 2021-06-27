@@ -39,6 +39,8 @@ def apply_mapping(long_format_data, description_variables, code_length=3, delime
     """
 
     df4mdl = long_format_data.copy()
+    # trim and convert description columns to string
+    df4mdl[description_variables]=df4mdl[description_variables].astype(str).apply(lambda x: x.str.strip())
     # Description present in supplied mapping dictionary
     new_description = np.unique(df4mdl[description_variables].values)
     # subset relevant mapping
