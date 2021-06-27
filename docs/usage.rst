@@ -81,19 +81,20 @@ Compare response series and predicted series along with errors from decompositio
     # Create response variable and predicted series
     mmm.assess_error(apply_coef(df, coef, dep["Dep"]))
 
-Optimize spend based on revenue where :math:`Revenue = \sum_{i=0}^{N} Coefficient_i * Spend_i^{Power_i}`. Basic input parameters are contraints amount, coefficient and exponent. Constraints can be applied on spend for spend based optimization or revenue for goal based optimization. In addition to these, one can also apply additional contrains like lower and upper bound for spend as well as revenue::
+Optimize spend based on revenue where :math:`Revenue = \sum_{i=0}^{N} Coefficient_i * Spend_i^{Power_i}`. Basic input parameters are coefficient, intial spend, exponent and contraints amount. Constraints can be applied on spend for spend based optimization or revenue for goal based optimization. In addition to these, one can also apply additional contrains like lower and upper bound for spend can also be supplied::
 
-    import gpkit
-    optimum_sol=mmm.optimize_spend(
-                                    10000,
-                                    [85.0, 58.0, 70.0],
-                                    [0.6, 0.4, 0.8],
-                                    spend_lower_limit=[10, 500, 1],
-                                    spend_upper_limit=[10000, 500000, 1000],
-                                    revenue_lower_limit=[500, 696.65, 70.00],
-                                    revenue_upper_limit=[21351.03, 11041.19, 17583.21],
-                                    constraint='spend')
-    # Summary of optimization
-    optimum_sol.table()
+    optimized_spend, optimized_revenue, optimized_status = mmm.mmm_optimize(
+		[47, 75, 13, 63, 96, 25, 17],
+		[806, 332, 173, 661, 286, 253, 978],
+		[0.9 , 0.32, 0.97, 0.53, 0.02, 0.86, 0.67],
+		3489, 
+		contraint_type="budget", 
+		lower_bound=[644.8, 265.6, 138.4, 528.8, 228.8, 202.4, 782.4],
+		upper_bound=[967.2, 398.4, 207.6, 793.2, 343.2, 303.6, 1173.6])
     # Optimized Spend
-    list(*[*optimum_sol["freevariables"].values()])
+    optimized_spend
+    # Optimized Revenue
+    optimized_revenue
+    # Optimized Status whether the algorithm converged or not
+    optimized_status
+	

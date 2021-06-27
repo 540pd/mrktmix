@@ -1,8 +1,8 @@
 import random
-from pytest import approx
 
 import numpy as np
 import pandas as pd
+from pytest import approx
 
 import mrktmix as mmm
 
@@ -1645,59 +1645,60 @@ def test_apply_coef():
                                                             names=[None, 'Variable', 'Adstock', 'Power', 'Lag']))
     pd.testing.assert_frame_equal(mmm.apply_coef(df_2, coef_input, nodes=node_input), output)
 
+
 def test_optimize():
-    coef=[47, 75, 13, 63, 96, 25, 17]
-    intial_spend=[806, 332, 173, 661, 286, 253, 978]
-    power=[0.9 , 0.32, 0.97, 0.53, 0.02, 0.86, 0.67]
-    lb=[644.8, 265.6, 138.4, 528.8, 228.8, 202.4, 782.4]
-    ub=[967.2, 398.4, 207.6, 793.2, 343.2, 303.6, 1173.6]
-    
-    #budget optimization
-    optim_result=mmm.mmm_optimize(coef,
-        intial_spend,
-        power,
-        3489, 
-        contraint_type="budget", 
-        lower_bound=lb,
-        upper_bound=ub)
-    optimized_spend=[967.19999999, 265.6       , 207.6       , 733.8       ,228.8       , 303.6       , 782.4       ]
+    coef = [47, 75, 13, 63, 96, 25, 17]
+    intial_spend = [806, 332, 173, 661, 286, 253, 978]
+    power = [0.9, 0.32, 0.97, 0.53, 0.02, 0.86, 0.67]
+    lb = [644.8, 265.6, 138.4, 528.8, 228.8, 202.4, 782.4]
+    ub = [967.2, 398.4, 207.6, 793.2, 343.2, 303.6, 1173.6]
+
+    # budget optimization
+    optim_result = mmm.mmm_optimize(coef,
+                                    intial_spend,
+                                    power,
+                                    3489,
+                                    contraint_type="budget",
+                                    lower_bound=lb,
+                                    upper_bound=ub)
+    optimized_spend = [967.19999999, 265.6, 207.6, 733.8, 228.8, 303.6, 782.4]
     assert optim_result[0] == approx(optimized_spend)
     assert optim_result[1] == 32679.17751824619
-    assert optim_result[2] == True
-    
-    #Revenue Maximization
-    optim_result=mmm.mmm_optimize(coef,
-        intial_spend,
-        power,
-        28511.75 , 
-        contraint_type="revenue", 
-        lower_bound=lb,
-        upper_bound=ub)
-    optimized_spend=[869.72435105, 265.6       , 138.4       , 528.8       , 228.8       , 202.4       , 782.4       ]
+    assert optim_result[2]
+
+    # Revenue Maximization
+    optim_result = mmm.mmm_optimize(coef,
+                                    intial_spend,
+                                    power,
+                                    28511.75,
+                                    contraint_type="revenue",
+                                    lower_bound=lb,
+                                    upper_bound=ub)
+    optimized_spend = [869.72435105, 265.6, 138.4, 528.8, 228.8, 202.4, 782.4]
     assert optim_result[0] == approx(optimized_spend)
     assert optim_result[1] == 28511.750000005988
-    assert optim_result[2] == True
+    assert optim_result[2]
 
-    optim_result=mmm.mmm_optimize(coef,
-        intial_spend,
-        power,
-        5000, 
-        contraint_type="budget", 
-        lower_bound=lb,
-        upper_bound=ub)
-    optimized_spend=[ 967.2,  398.4,  207.6,  793.2,  343.2,  303.6, 1173.6]
+    optim_result = mmm.mmm_optimize(coef,
+                                    intial_spend,
+                                    power,
+                                    5000,
+                                    contraint_type="budget",
+                                    lower_bound=lb,
+                                    upper_bound=ub)
+    optimized_spend = [967.2, 398.4, 207.6, 793.2, 343.2, 303.6, 1173.6]
     assert optim_result[0] == approx(optimized_spend)
     assert optim_result[1] == 33290.34098615513
-    assert optim_result[2] == False
+    assert not optim_result[2]
 
-    optim_result=mmm.mmm_optimize(coef,
-        intial_spend,
-        power,
-        35000, 
-        contraint_type="revenue", 
-        lower_bound=lb,
-        upper_bound=ub)
-    optimized_spend=[ 967.2       ,  398.4       ,  207.6       ,  793.19508827, 228.8       ,  303.6       , 1173.59999998]
+    optim_result = mmm.mmm_optimize(coef,
+                                    intial_spend,
+                                    power,
+                                    35000,
+                                    contraint_type="revenue",
+                                    lower_bound=lb,
+                                    upper_bound=ub)
+    optimized_spend = [967.2, 398.4, 207.6, 793.19508827, 228.8, 303.6, 1173.59999998]
     assert optim_result[0] == approx(optimized_spend)
     assert optim_result[1] == 33289.46249496577
-    assert optim_result[2] == False
+    assert not optim_result[2]
