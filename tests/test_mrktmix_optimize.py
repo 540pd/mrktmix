@@ -1,6 +1,6 @@
 from pytest import approx
 
-from mrktmix.dataprep import optimization as optim
+import mrktmix.optimization as optim
 
 
 def test_optmization():

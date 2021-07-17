@@ -2,9 +2,10 @@ import random
 
 import numpy as np
 import pandas as pd
+from scipy.stats import pareto
 
 
-def generate_code(code_length, chars='ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'):
+def generate_code(code_length, chars='ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789', cum_weights=None):
     """
     Generate random code from ascii and digits based character length
 
@@ -15,7 +16,7 @@ def generate_code(code_length, chars='ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'):
     :return: random slected literal of length given in code length from chars
     :rtype: string
     """
-    return (''.join(random.choices(chars, k=code_length)))
+    return (''.join(random.choices(chars, cum_weights=cum_weights, k=code_length)))
 
 
 def apply_mapping(long_format_data, description_variables, code_length=3, delimeter="_", description2code={}, case_sensitive=False):
@@ -40,50 +41,68 @@ def apply_mapping(long_format_data, description_variables, code_length=3, delime
 
     df4mdl = long_format_data.copy()
     # trim and convert description columns to string
-    df4mdl[description_variables]=df4mdl[description_variables].astype(str).apply(lambda x: x.str.strip())
+    df4mdl[description_variables] = df4mdl[description_variables].astype(str).apply(lambda x: x.str.strip())
     # Description present in supplied mapping dictionary
     new_description = np.unique(df4mdl[description_variables].values)
     # subset relevant mapping
     des2code = {}
-    # same code without considering case
-    if not case_sensitive:
-        description2code_title = {k.title(): v for k, v in description2code.items()}
-        [des2code.update({(i, description2code_title[i.title()])}) for i in new_description if i.title() in list(description2code_title)]
-    # update dictionary if case matches
-    des2code.update({k: description2code[k] for k in new_description[np.isin(new_description, list(description2code.keys()))]})
+    # correct any inconsistency in given description. same description cann't have two or more codes
+    if len(description2code):
+        # same code without considering case
+        if not case_sensitive:
+            description2code_title = {k.title(): v for k, v in description2code.items()}
+            [des2code.update({(i, description2code_title[i.title()])})
+             for i in new_description if i.title() in list(description2code_title)]
+        # update dictionary if case matches
+        des2code.update({k: description2code[k] for k in new_description[np.isin(new_description, list(description2code.keys()))]})
 
     # Generate new mapping if description is not present in supplied mapping dictionary
     new_description = new_description[~np.isin(new_description, list(des2code.keys()))]
-    des2code_keep = {}
+#    des2code_keep = {}
     if len(new_description):
         des2code_new = {}
         avoid_infinite_loop = 1
+        # generate code
+        if not case_sensitive:
+            series4code_original = pd.Series(new_description, index=new_description).replace(r'\W|_', '', regex=True).str.upper()
+            duplicate_description = series4code_original.index.str.upper().duplicated()
+            series4code = series4code_original[~duplicate_description]
+        else:
+            series4code = pd.Series(new_description, index=new_description).replace(r'\W|_', '', regex=True).str.upper()
+        # distribution of literal- is used to generate code
+        dist_fixed = pareto.cdf(range(1, 10000), 1)
         while True:
-            # generate code
-            series4code = pd.Series(new_description, index=new_description).replace(r'\W|_', '', regex=True)
             if avoid_infinite_loop == 1:
                 des2code_generate = (series4code * ((code_length / series4code.str.len()).apply(np.ceil)
-                                                    ).astype(int)).str[:code_length].str.upper()
-            elif avoid_infinite_loop == 2:
-                des2code_generate = series4code.apply(lambda x: generate_code(code_length, x.upper()))
-            elif avoid_infinite_loop == 3:
+                                                    ).astype(int)).str[:code_length]
+            elif avoid_infinite_loop < 5:
+                des2code_generate = series4code.apply(lambda x: generate_code(code_length, x, dist_fixed[1:len(x) + 1]))
+            elif avoid_infinite_loop < 8:
                 des2code_generate = series4code.apply(lambda x: generate_code(code_length, "ABCDEFGHIJKLMNOPQRSTUVWXYZ"))
             else:
                 des2code_generate = series4code.apply(lambda x: generate_code(code_length, "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"))
             # check if code is duplicate or exists in original description to code mapping
-            des_code_dup = des2code_generate.isin(des2code.values()) | des2code_generate.duplicated(keep=False)
+            des_code_dup = des2code_generate.isin(
+                des2code.values()) | des2code_generate.duplicated(
+                keep=False) | des2code_generate.isin(
+                des2code_new.values())
             # Finalize mapping if duplicate is not present
             des2code_new.update(des2code_generate[~des_code_dup].to_dict())
-            # update new description if duplicate codes are present
-            new_description = des_code_dup[des_code_dup].index
-            avoid_infinite_loop = avoid_infinite_loop + 1
             # break loop if no new description is present
             if not(des_code_dup.sum()):
                 break
+            # update new description if duplicate codes are present
+            avoid_infinite_loop = avoid_infinite_loop + 1
+            # update series to generate code
+            series4code = series4code[des_code_dup.values]
         if not case_sensitive:
+            # update codes when description is not case sensitive
+            description2code_title = {k.title(): v for k, v in des2code_new.items()}
+            [des2code_new.update({(i, description2code_title[i.title()])})
+             for i in series4code_original[duplicate_description].index if i.title() in list(description2code_title)]
             # Code should be common if description is matches after ignoring case
-            des2code_new = dict([(x, v) if x.lower() not in des2code_keep and not des2code_keep.update(
-                {x.lower(): v}) else (x, des2code_keep[x.lower()]) for x, v in des2code_new.items()])
+#             des2code_new = dict([(x, v) if x.lower() not in des2code_keep and not des2code_keep.update(
+#                 {x.lower(): v}) else (x, des2code_keep[x.lower()]) for x, v in des2code_new.items()])
         des2code.update(des2code_new)
 
     # Create Variable in raw file
