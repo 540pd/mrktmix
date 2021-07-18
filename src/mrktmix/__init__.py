@@ -1,4 +1,4 @@
-__version__ = '0.6.0'
+__version__ = '0.6.1'
 from mrktmix.data_create import aggregate_rows
 from mrktmix.data_create import create_mdldata
 from mrktmix.data_create import parse_variable
