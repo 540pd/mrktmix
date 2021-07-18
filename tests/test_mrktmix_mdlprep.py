@@ -18,6 +18,34 @@ def test_generate_code():
     assert raw_dp.generate_code(5, chars="ABC") == 'CACBB'
 
 
+def test_update_mapping():
+    # Case sensitive = True feature
+    pre_defined_mapping = {'Spend': 'SPD', ' Spend': 'SPP', 'SPend': 'SAd', 'Spe nd': 'SPK', 'Spend ': 'SHD', 'gGRP': 'Trp'}
+    description_mapping = raw_dp.update_mapping(
+        np.array(['GRP', 'GRp', 'SpenD', 'Spend', 'TV_Free', 'gRP']),
+        pre_defined_mapping,
+        case_sensitive=True)
+    assert description_mapping == {'Spend': 'SPD'}
+
+    description_mapping = raw_dp.update_mapping(
+        np.array(['GRP', 'GRp', 'SpenD', 'Spend', 'TV_Free', 'gRP']),
+        {'Spend': 'SPD', ' Spend': 'SPP', 'SPend': 'SAd', 'Spe nd': 'SPK', 'Spend ': 'SHD', 'gGRP': 'Trp'},
+        case_sensitive=False)
+    assert description_mapping == {'SpenD': 'SAd', 'Spend': 'SAd'}
+
+    description_mapping = raw_dp.update_mapping(
+        np.array(['GRP', 'GRp', 'SpenD', 'Spend', 'TV_Free', 'gRP']),
+        {'Spend': 'SPD', ' Spend': 'SPP', 'SPend': 'SAd', 'Spe nd': 'SPK', 'Spend ': 'SHD', 'GRP': 'Trp'},
+        case_sensitive=False)
+    assert description_mapping == {'GRP': 'Trp', 'GRp': 'Trp', 'SpenD': 'SAd', 'Spend': 'SAd', 'gRP': 'Trp'}
+
+    description_mapping = raw_dp.update_mapping(
+        np.array(['GRP', 'GRp', 'SpenD', 'Spend', 'TV_Free', 'gRP']),
+        {'Spend': 'SPD', ' Spend': 'SPP', 'SPend': 'SAd', 'Spe nd': 'SPK', 'Spend ': 'SHD', 'GRP': 'Trp'},
+        case_sensitive=True)
+    assert description_mapping == {'GRP': 'Trp', 'Spend': 'SPD'}
+
+
 def test_apply_mapping():
     # Case sensitive = True feature
     long_format_data = {'Panel': {0: 'panel1', 1: 'panel1', 2: 'panel1', 3: 'panel1'},

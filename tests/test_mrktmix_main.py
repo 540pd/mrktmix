@@ -225,9 +225,9 @@ def test_create_mdldata():
     input_files = {"source1": input_df1, "source2": input_df2}
 
     # Simple case
-    output_mapping = {'TV_Free': 'TVF', 'GRP': 'PGP', 'GRp': 'PGP', 'SpenD': 'NPN', 'Spend': 'NPN', 'gRP': 'PGP'}
-    output_data = {('sum', 'TVF_PGP'): {'panel1': 66.0, 'panel2': 90.0, 'panel3': 146.0},
-                   ('sum', 'TVF_NPN'): {'panel1': 204.0, 'panel2': 598.0, 'panel3': np.nan}}
+    output_mapping = {'GRP': 'GRP', 'SpenD': 'SPE', 'TV_Free': 'TVF', 'GRp': 'GRP', 'Spend': 'SPE', 'gRP': 'GRP'}
+    output_data = {('sum', 'TVF_GRP'): {'panel1': 66.0, 'panel2': 90.0, 'panel3': 146.0},
+                   ('sum', 'TVF_SPE'): {'panel1': 204.0, 'panel2': 598.0, 'panel3': np.nan}}
     output_data = pd.DataFrame.from_dict(output_data)
     output_data.columns.names = ["_summary_type_", '_Variable_']
     output_data.index.names = ['Panel']
@@ -241,16 +241,16 @@ def test_create_mdldata():
                                       ['TV_Free', 'GRP'],
                                       ['TV_Free', 'SpenD'],
                                       ['TV_Free', 'gRP']]),
-                            index=pd.MultiIndex.from_tuples([('source1', 'TVF_PGP'),
-                                                             ('source1', 'TVF_NPN'),
-                                                             ('source1', 'TVF_PGP'),
-                                                             ('source1', 'TVF_NPN'),
-                                                             ('source1', 'TVF_PGP'),
-                                                             ('source2', 'TVF_PGP'),
-                                                             ('source2', 'TVF_NPN'),
-                                                             ('source2', 'TVF_PGP'),
-                                                             ('source2', 'TVF_NPN'),
-                                                             ('source2', 'TVF_PGP')],
+                            index=pd.MultiIndex.from_tuples([('source1', 'TVF_GRP'),
+                                                             ('source1', 'TVF_SPE'),
+                                                             ('source1', 'TVF_GRP'),
+                                                             ('source1', 'TVF_SPE'),
+                                                             ('source1', 'TVF_GRP'),
+                                                             ('source2', 'TVF_GRP'),
+                                                             ('source2', 'TVF_SPE'),
+                                                             ('source2', 'TVF_GRP'),
+                                                             ('source2', 'TVF_SPE'),
+                                                             ('source2', 'TVF_GRP')],
                                                             names=['_File_', '_Variable_']),
                             columns=["Channel", "Metric"])
     random.seed(999)
@@ -303,15 +303,20 @@ def test_create_mdldata():
     pd.testing.assert_frame_equal(file_mapping, file_map)
 
     # case sensitive
-    output_data = {('sum', 'TV_SPE'): {'panel1': np.nan, 'panel2': 258.0, 'panel3': np.nan},
-                   ('sum', 'TV_PGP'): {'panel1': 66.0, 'panel2': np.nan, 'panel3': np.nan},
-                   ('sum', 'TV_RRG'): {'panel1': np.nan, 'panel2': np.nan, 'panel3': 146.0},
+    output_data = {('sum', 'TV_GGG'): {'panel1': np.nan, 'panel2': np.nan, 'panel3': 146.0},
                    ('sum', 'TV_GRP'): {'panel1': np.nan, 'panel2': 90.0, 'panel3': np.nan},
-                   ('sum', 'TV_SPD'): {'panel1': 204.0, 'panel2': 340.0, 'panel3': np.nan}}
+                   ('sum', 'TV_RGR'): {'panel1': 66.0, 'panel2': np.nan, 'panel3': np.nan},
+                   ('sum', 'TV_SPD'): {'panel1': 204.0, 'panel2': 340.0, 'panel3': np.nan},
+                   ('sum', 'TV_SPE'): {'panel1': np.nan, 'panel2': 258.0, 'panel3': np.nan}}
     output_data = pd.DataFrame.from_dict(output_data)
     output_data.columns.names = ["_summary_type_", '_Variable_']
     output_data.index.names = ['Panel']
-    output_mapping = {'GRP': 'GRP', 'Spend': 'SPD', 'TV_Free': 'TV', 'SpenD': 'SPE', 'GRp': 'PGP', 'gRP': 'RRG'}
+    output_mapping = {'GRP': 'GRP',
+                      'Spend': 'SPD',
+                      'TV_Free': 'TV',
+                      'SpenD': 'SPE',
+                      'GRp': 'RGR',
+                      'gRP': 'GGG'}
     file_map = pd.DataFrame(np.array([['TV_Free', 'GRp'],
                                       ['TV_Free', 'Spend'],
                                       ['TV_Free', 'GRP'],
@@ -322,16 +327,16 @@ def test_create_mdldata():
                                       ['TV_Free', 'GRP'],
                                       ['TV_Free', 'SpenD'],
                                       ['TV_Free', 'gRP']]),
-                            index=pd.MultiIndex.from_tuples([('source1', 'TV_PGP'),
+                            index=pd.MultiIndex.from_tuples([('source1', 'TV_RGR'),
                                                              ('source1', 'TV_SPD'),
                                                              ('source1', 'TV_GRP'),
                                                              ('source1', 'TV_SPE'),
-                                                             ('source1', 'TV_RRG'),
-                                                             ('source2', 'TV_PGP'),
+                                                             ('source1', 'TV_GGG'),
+                                                             ('source2', 'TV_RGR'),
                                                              ('source2', 'TV_SPD'),
                                                              ('source2', 'TV_GRP'),
                                                              ('source2', 'TV_SPE'),
-                                                             ('source2', 'TV_RRG')],
+                                                             ('source2', 'TV_GGG')],
                                                             names=['_File_', '_Variable_']),
                             columns=["Channel", "Metric"])
     # case sensitive
@@ -345,24 +350,28 @@ def test_create_mdldata():
     pd.testing.assert_frame_equal(file_mapping, file_map)
 
     # case sensitive and iteratively
-    output = pd.DataFrame(np.array([[np.nan, 33., np.nan, 102., np.nan, np.nan, 33., np.nan, 102., np.nan],
-                                    [45., np.nan, np.nan, 170., 129., 45., np.nan, np.nan, 170., 129.],
-                                    [np.nan, np.nan, 73., np.nan, np.nan, np.nan, np.nan, 73., np.nan, np.nan]]),
+    output = pd.DataFrame(np.array([[np.nan, np.nan, 33., 102., np.nan, np.nan, np.nan, 33., 102., np.nan],
+                                    [np.nan, 45., np.nan, 170., 129., np.nan, 45., np.nan, 170., 129.],
+                                    [73., np.nan, np.nan, np.nan, np.nan, 73., np.nan, np.nan, np.nan, np.nan]]),
                           ['panel1', 'panel2', 'panel3'],
-                          pd.MultiIndex.from_tuples([
-                              ('sum', 'TV_GRP'),
-                              ('sum', 'TV_PGP'),
-                              ('sum', 'TV_RRG'),
-                              ('sum', 'TV_SPD'),
-                              ('sum', 'TV_SPE'),
-                              ('sum', 'TV_GRP'),
-                              ('sum', 'TV_PGP'),
-                              ('sum', 'TV_RRG'),
-                              ('sum', 'TV_SPD'),
-                              ('sum', 'TV_SPE')],
-        names=('_summary_type_', '_Variable_')))
+                          pd.MultiIndex.from_tuples([('sum', 'TV_GGG'),
+                                                     ('sum', 'TV_GRP'),
+                                                     ('sum', 'TV_RGR'),
+                                                     ('sum', 'TV_SPD'),
+                                                     ('sum', 'TV_SPE'),
+                                                     ('sum', 'TV_GGG'),
+                                                     ('sum', 'TV_GRP'),
+                                                     ('sum', 'TV_RGR'),
+                                                     ('sum', 'TV_SPD'),
+                                                     ('sum', 'TV_SPE')],
+                                                    names=('_summary_type_', '_Variable_')))
     output.index.names = ['Panel']
-    output_mapping = {'GRP': 'GRP', 'Spend': 'SPD', 'TV_Free': 'TV', 'SpenD': 'SPE', 'GRp': 'PGP', 'gRP': 'RRG'}
+    output_mapping = {'GRP': 'GRP',
+                      'Spend': 'SPD',
+                      'TV_Free': 'TV',
+                      'SpenD': 'SPE',
+                      'GRp': 'RGR',
+                      'gRP': 'GGG'}
     file_map = pd.DataFrame(np.array([['TV_Free', 'GRp'],
                                       ['TV_Free', 'Spend'],
                                       ['TV_Free', 'GRP'],
@@ -373,16 +382,16 @@ def test_create_mdldata():
                                       ['TV_Free', 'GRP'],
                                       ['TV_Free', 'SpenD'],
                                       ['TV_Free', 'gRP']]),
-                            pd.MultiIndex.from_tuples([('source1', 'TV_PGP'),
+                            pd.MultiIndex.from_tuples([('source1', 'TV_RGR'),
                                                        ('source1', 'TV_SPD'),
                                                        ('source1', 'TV_GRP'),
                                                        ('source1', 'TV_SPE'),
-                                                       ('source1', 'TV_RRG'),
-                                                       ('source2', 'TV_PGP'),
+                                                       ('source1', 'TV_GGG'),
+                                                       ('source2', 'TV_RGR'),
                                                        ('source2', 'TV_SPD'),
                                                        ('source2', 'TV_GRP'),
                                                        ('source2', 'TV_SPE'),
-                                                       ('source2', 'TV_RRG')],
+                                                       ('source2', 'TV_GGG')],
                                                       names=('_File_', '_Variable_')),
                             columns=["Channel", "Metric"])
     random.seed(999)

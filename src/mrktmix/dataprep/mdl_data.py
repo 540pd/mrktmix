@@ -19,6 +19,30 @@ def generate_code(code_length, chars='ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789', cum
     return (''.join(random.choices(chars, cum_weights=cum_weights, k=code_length)))
 
 
+def update_mapping(new_description, user_defined_mapping, case_sensitive=True):
+    """
+    Subset relevant mapping from user defined mapping based on new description. Also handles if the mapping are case sensitive
+    or not
+
+    :param new_description: array to generate mapping
+    :type new_description: numpy.darray
+    :param user_defined_mapping: pre-defined mapping
+    :type user_defined_mapping: dictionary
+    :param case_sensitive: whether the relevant mapping on case or not
+    :type case_sensitive: bool
+    :return: relevant dictionary based on new description
+    :rtype: dictionary
+    """
+
+    des2code = {}
+    if not case_sensitive:
+        description2code_title = {k.title(): v for k, v in user_defined_mapping.items()}
+        [des2code.update({(i, description2code_title[i.title()])}) for i in new_description if i.title() in list(description2code_title)]
+    else:
+        des2code.update({k: user_defined_mapping[k] for k in new_description[np.isin(new_description, list(user_defined_mapping.keys()))]})
+    return(des2code)
+
+
 def apply_mapping(long_format_data, description_variables, code_length=3, delimeter="_", description2code={}, case_sensitive=False):
     """
     Create/apply mapping on description variable on data to create variable name for modeling data
@@ -48,17 +72,10 @@ def apply_mapping(long_format_data, description_variables, code_length=3, delime
     des2code = {}
     # correct any inconsistency in given description. same description cann't have two or more codes
     if len(description2code):
-        # same code without considering case
-        if not case_sensitive:
-            description2code_title = {k.title(): v for k, v in description2code.items()}
-            [des2code.update({(i, description2code_title[i.title()])})
-             for i in new_description if i.title() in list(description2code_title)]
-        # update dictionary if case matches
-        des2code.update({k: description2code[k] for k in new_description[np.isin(new_description, list(description2code.keys()))]})
+        des2code.update(update_mapping(new_description, description2code, case_sensitive=case_sensitive))
 
     # Generate new mapping if description is not present in supplied mapping dictionary
     new_description = new_description[~np.isin(new_description, list(des2code.keys()))]
-#    des2code_keep = {}
     if len(new_description):
         des2code_new = {}
         avoid_infinite_loop = 1
@@ -70,7 +87,7 @@ def apply_mapping(long_format_data, description_variables, code_length=3, delime
         else:
             series4code = pd.Series(new_description, index=new_description).replace(r'\W|_', '', regex=True).str.upper()
         # distribution of literal- is used to generate code
-        dist_fixed = pareto.cdf(range(1, 10000), 1)
+        dist_fixed = pareto.cdf(range(1, series4code.str.len().max() + 2), 1)
         while True:
             if avoid_infinite_loop == 1:
                 des2code_generate = (series4code * ((code_length / series4code.str.len()).apply(np.ceil)
@@ -96,13 +113,11 @@ def apply_mapping(long_format_data, description_variables, code_length=3, delime
             # update series to generate code
             series4code = series4code[des_code_dup.values]
         if not case_sensitive:
-            # update codes when description is not case sensitive
-            description2code_title = {k.title(): v for k, v in des2code_new.items()}
-            [des2code_new.update({(i, description2code_title[i.title()])})
-             for i in series4code_original[duplicate_description].index if i.title() in list(description2code_title)]
-            # Code should be common if description is matches after ignoring case
-#             des2code_new = dict([(x, v) if x.lower() not in des2code_keep and not des2code_keep.update(
-#                 {x.lower(): v}) else (x, des2code_keep[x.lower()]) for x, v in des2code_new.items()])
+            des2code_new.update(
+                update_mapping(
+                    series4code_original[duplicate_description].index,
+                    des2code_new,
+                    case_sensitive=case_sensitive))
         des2code.update(des2code_new)
 
     # Create Variable in raw file
