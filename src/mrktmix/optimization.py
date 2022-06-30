@@ -10,7 +10,8 @@ def optimization(_coef,
                  lower_bound,
                  upper_bound,
                  tot_constraint,
-                 contraint_type="budget"):
+                 contraint_type="budget",
+                 maxiter=100):
     """ Optimize revenue/budget (Revenue= summation of coef * spend ^ power) based in initial value and constraint. Constraints
     is in form of lower bound, upper bound and either budget or revenue
 
@@ -28,6 +29,8 @@ def optimization(_coef,
     :type tot_constraint: numeric
     :param contraint_type: defines type for tot_constraint. Default value is 'budget'
     :type contraint_type: string, optional
+    :param maxiter: maximum number of iteration
+    :type maxiter: integer, optional
     :return: Optimized result
     :rtype: scipy.optimize.optimize.OptimizeResult
     """
@@ -56,7 +59,8 @@ def optimization(_coef,
             return tot_constraint - sum(x)
     return (minimize(fun=objective, x0=_init, jac=obj_der, method='SLSQP',  # trust-constr,SLSQP
                      bounds=Bounds(lower_bound, upper_bound),
-                     constraints=[{'type': 'eq', 'fun': constrain}]))
+                     constraints=[{'type': 'eq', 'fun': constrain}],
+                     options = {"maxiter": maxiter}))
 
 
 def mmm_optimize(_coef,
@@ -65,7 +69,8 @@ def mmm_optimize(_coef,
                  tot_constraint,
                  contraint_type="budget",
                  lower_bound=None,
-                 upper_bound=None):
+                 upper_bound=None,
+                 maxiter=100):
     """ Optimize revenue/budget (Revenue= summation of coef * spend ^ power) based in initial value and constraint. Constraints
     is in form of lower bound, upper bound and either budget or revenue
 
@@ -83,6 +88,8 @@ def mmm_optimize(_coef,
     :type lower_bound: list of number, optional
     :param upper_bound: list of number representing upper bound for spend
     :type upper_bound: list of number, optional
+    :param maxiter: maximum number of iteration
+    :type maxiter: integer, optional
     :return: Optimized result representing optimized spend, optimized revenue and whether optimization was successful or not
     :rtype: tuple of array, number and bool
     """
@@ -97,5 +104,6 @@ def mmm_optimize(_coef,
                                 lower_bound,
                                 upper_bound,
                                 tot_constraint,
-                                contraint_type=contraint_type)
+                                contraint_type=contraint_type,
+                                maxiter=maxiter)
     return(optim_output.x, sum(np.multiply(_coef, np.power(optim_output.x, _power))), optim_output.success)
